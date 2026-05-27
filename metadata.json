@@ -1,0 +1,6 @@
+{
+  "name": "ServiPlus Maputo",
+  "description": "Plataforma de mercado para freelancers e contratantes de TI em Maputo, Moçambique. Conecta talentos locais com oportunidades reais de trabalho.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
