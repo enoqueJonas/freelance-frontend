@@ -1,0 +1,34 @@
+name: D53 Real Django UI
+
+on:
+  push:
+    branches: [feat/d53-real-django-flow]
+  pull_request:
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "vite.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/d53-real-api.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Test API integration client (mock fetch only, no real browser)
+        run: npx tsx --test tests/real-api-client.test.ts
+      - name: Type-check entire React project
+        run: npm run lint
+      - name: Production build
+        run: npm run build
