@@ -9,7 +9,7 @@
  */
 
 import React from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
@@ -22,6 +22,7 @@ import { Dashboard } from './pages/Dashboard';
 import { ProfileDetail } from './pages/ProfileDetail';
 import { Messages } from './pages/Messages';
 import { Notifications } from './pages/Notifications';
+import { RealDjangoFlow } from './pages/RealDjangoFlow';
 
 function AppContent() {
   const { isLoading } = useAuth();
@@ -65,13 +66,15 @@ function AppContent() {
   );
 }
 
-export default function App() {
-  return (
-    <HashRouter>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </HashRouter>
-  );
+function RouteShell() {
+  const { pathname } = useLocation();
+  // A separate tree: real JWT workflow never mounts the legacy mock AuthProvider.
+  if (pathname === '/real') return <RealDjangoFlow />;
+  return <AuthProvider><AppContent /></AuthProvider>;
 }
+
+export default function App() {
+  return <HashRouter><RouteShell /></HashRouter>;
+}
+
 
