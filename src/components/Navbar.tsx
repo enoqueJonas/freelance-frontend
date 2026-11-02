@@ -47,6 +47,10 @@ export const Navbar: React.FC = () => {
           Início
         </Link>
         
+        <Link to="/real" className={linkStyle('/real')} onClick={() => setIsOpen(false)}>
+          <span className="flex items-center gap-1.5"><FileText size={16} /> Fluxo API real (D53)</span>
+        </Link>
+
         {/* Guest Search Options */}
         {(!user || user.role === 'worker') && (
           <Link to="/offers" className={linkStyle('/offers')} onClick={() => setIsOpen(false)}>
