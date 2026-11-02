@@ -2,7 +2,7 @@
  * JWT access token remains in React memory only; no localStorage.
  * Development routes /api through Vite proxy; production requires same-origin proxy.
  */
-const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+const base = (import.meta.env?.VITE_API_BASE_URL || '').replace(/\/$/, '');
 
 export type Actor = { id: number; username: string; name: string; email: string; phone: string };
 export type Worker = { id: number; name: string; skills: string; experience: string };
