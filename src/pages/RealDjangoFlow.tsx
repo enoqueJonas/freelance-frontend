@@ -75,6 +75,7 @@ export function RealDjangoFlow() {
     setEngagements([]);
     setProposals({});
     setPassword('');
+    setMode('login');
     setContractId(null);
     setReviewed({});
     setError('');
