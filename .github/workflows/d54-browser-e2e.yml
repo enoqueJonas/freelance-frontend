@@ -1,0 +1,96 @@
+name: D54 Real Browser E2E
+
+on:
+  push:
+    branches: [test/d54-real-browser-e2e]
+  pull_request:
+    paths:
+      - "src/**"
+      - "tests/d54-real-browser.spec.ts"
+      - "playwright.d54.config.ts"
+      - "vite.config.ts"
+      - ".github/workflows/d54-browser-e2e.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  real-react-django:
+    runs-on: ubuntu-24.04 # Playwright 1.56.1 does not support ubuntu-26.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout frontend under test
+        uses: actions/checkout@v4
+      - name: Checkout real Django backend D53
+        uses: actions/checkout@v4
+        with:
+          repository: enoqueJonas/freelance-backend
+          ref: ced54117d2db0db9e049086fcc975dd4f36807e0 # backend D53 verified at 71/71
+          path: backend
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install frontend dependencies and pinned Playwright runner
+        run: |
+          npm ci
+          npm install --no-save --ignore-scripts @playwright/test@1.56.1
+      - name: Install Django dependencies
+        run: python -m pip install -r backend/requirements.txt
+      - name: Install Chromium and system packages
+        run: npx playwright install --with-deps chromium
+      - name: Create isolated SQLite database
+        working-directory: backend
+        run: python manage.py migrate --noinput
+      - name: Generate test-only password without committing secrets
+        run: echo "E2E_PASSWORD=$(openssl rand -hex 24)" >> "$GITHUB_ENV"
+      - name: Launch actual Django and Vite servers
+        run: |
+          (cd backend && nohup python manage.py runserver 127.0.0.1:8000 --noreload > /tmp/d54-django.log 2>&1 &)
+          nohup npm run dev -- --host 127.0.0.1 > /tmp/d54-vite.log 2>&1 &
+          for attempt in $(seq 1 70); do
+            if curl -fsS http://127.0.0.1:8000/admin/login/ >/dev/null 2>&1 && curl -fsS http://127.0.0.1:3000/ >/dev/null 2>&1; then
+              echo "React and Django are responding"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::React or Django failed to start"
+          tail -80 /tmp/d54-django.log || true
+          tail -80 /tmp/d54-vite.log || true
+          exit 1
+      - name: Verify TypeScript and build
+        run: |
+          npm run lint
+          npm run build
+      - name: Run actual Chromium browser with two Django users
+        run: npx playwright test -c playwright.d54.config.ts
+      - name: Upload genuine browser evidence from synthetic test data
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d54-real-browser-screenshots
+          path: artifacts/d54/*.png
+          if-no-files-found: error
+          retention-days: 30
+      - name: Print server diagnostics on failure
+        if: failure()
+        run: |
+          tail -120 /tmp/d54-django.log || true
+          tail -120 /tmp/d54-vite.log || true
+      - name: Upload failure screenshots only (no token traces)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d54-browser-failure-screenshots
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 3
