@@ -300,7 +300,7 @@ export function RealDjangoFlow() {
 
             {employer && (
               <section className="rounded-2xl border bg-white p-5">
-                <h2 className="font-bold text-lg mb-3">1. Criar oportunidade real</h2>
+                <h2 className="font-bold text-lg mb-3">Criar oportunidade</h2>
                 <form className="grid gap-3 md:grid-cols-[1fr_2fr_auto]" onSubmit={e=>{e.preventDefault();void execute(t=>realApi.createOpportunity(t,{title,description}),'Oportunidade guardada como rascunho.');}}>
                   <input className={field} required placeholder="Título" value={title} onChange={e=>setTitle(e.target.value)} />
                   <input className={field} required placeholder="Descrição" value={description} onChange={e=>setDescription(e.target.value)} />
@@ -309,9 +309,9 @@ export function RealDjangoFlow() {
               </section>
             )}
 
-            <section className="grid gap-4 lg:grid-cols-2">
+            <section className={employer ? "grid gap-4 lg:grid-cols-2" : "grid gap-4"}>
               <div className="rounded-2xl border bg-white p-5 space-y-3">
-                <h2 className="font-bold text-lg">2. Oportunidades disponíveis</h2>
+                <h2 className="font-bold text-lg">Oportunidades disponíveis</h2>
                 {others.length===0 && <p className="text-sm text-slate-500">Sem oportunidades abertas de outras contas.</p>}
                 {others.map(o=>(
                   <div className="rounded-xl border p-4 space-y-2" key={o.id}>
@@ -332,8 +332,9 @@ export function RealDjangoFlow() {
                   </div>
                 ))}
               </div>
-              <div className="rounded-2xl border bg-white p-5 space-y-3">
-                <h2 className="font-bold text-lg">3. As minhas oportunidades e propostas</h2>
+              {employer && (
+                <div className="rounded-2xl border bg-white p-5 space-y-3">
+                  <h2 className="font-bold text-lg">As minhas oportunidades e propostas</h2>
                 {mine.length===0 && <p className="text-sm text-slate-500">Nenhuma oportunidade criada.</p>}
                 {mine.map(o=>(
                   <div className="rounded-xl border p-4 space-y-3" key={o.id}>
@@ -351,7 +352,8 @@ export function RealDjangoFlow() {
                     ))}
                   </div>
                 ))}
-              </div>
+                </div>
+              )}
             </section>
 
             {worker && (
@@ -367,9 +369,12 @@ export function RealDjangoFlow() {
               </section>
             )}
 
-            <section className="rounded-2xl border bg-white p-5 space-y-4">
-              <h2 className="font-bold text-lg">4. Contratações e acordos versionados</h2>
-              {engagements.length===0 && <p className="text-sm text-slate-500">Sem contratações associadas a esta conta. Aceite uma proposta e entre com a outra conta para rever os termos.</p>}
+            {(worker || employer) && (
+              <section className="rounded-2xl border bg-white p-5 space-y-4">
+              <h2 className="font-bold text-lg">Contratações e acordos versionados</h2>
+              {engagements.length===0 && <p className="text-sm text-slate-500">{employer
+                ? 'Ainda não existem contratações. Quando receber propostas, pode seleccionar um trabalhador.'
+                : 'Ainda não existem contratações. Submeta uma proposta e acompanhe a decisão do empregador.'}</p>}
               <div className="flex flex-wrap gap-2">
                 {engagements.map(e=>(
                   <button key={e.id} className={contractId===e.id?button:secondary} onClick={()=>setContractId(e.id)}>
@@ -427,7 +432,8 @@ export function RealDjangoFlow() {
                   </div>
                 </div>
               )}
-            </section>
+              </section>
+            )}
           </>
         )}
       </main>
