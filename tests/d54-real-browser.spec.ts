@@ -56,10 +56,21 @@ async function acceptVersion(page: Page, number: number) {
 test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', async ({ page }) => {
   mkdirSync('artifacts/d54', { recursive: true });
   await register(page, employerName, 'Empregador D54', 'employer.d54@example.test', '84 123 4567');
+  // The account chooser must not open both role forms before the user asks.
+  await expect(page.getByPlaceholder('Nome da empresa')).toHaveCount(0);
+  await expect(page.getByPlaceholder('Competências: Django, React...')).toHaveCount(0);
+  const addEmployer = page.getByRole('button', { name: 'Adicionar perfil de empregador' });
+  await expect(addEmployer).toHaveAttribute('aria-expanded', 'false');
+  await addEmployer.click();
+  await expect(page.getByRole('form', { name: 'Novo perfil de empregador' })).toBeVisible();
+  await expect(page.getByRole('form', { name: 'Novo perfil de trabalhador' })).toHaveCount(0);
   await page.getByPlaceholder('Nome da empresa').fill('Empresa D54');
   await page.getByPlaceholder('Localização').fill('Maputo');
-  await page.locator('form:has(input[placeholder="Nome da empresa"])').getByRole('button', { name: 'Criar perfil' }).click();
+  await page.getByRole('form', { name: 'Novo perfil de empregador' })
+    .getByRole('button', { name: 'Criar perfil de empregador' }).click();
   await expect(page.getByText('Perfil de empregador criado.')).toBeVisible();
+  await expect(page.getByRole('form', { name: 'Novo perfil de empregador' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Adicionar perfil de trabalhador' })).toBeVisible();
 
   await page.getByPlaceholder('Título').fill('Portal institucional D54');
   await page.getByPlaceholder('Descrição').fill('Desenvolvimento web e revisão.');
@@ -71,13 +82,21 @@ test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', asy
 
   await signOut(page);
   await register(page, workerName, 'Trabalhador D54', 'worker.d54@example.test', '82 123 4567');
+  await expect(page.getByPlaceholder('Competências: Django, React...')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Adicionar perfil de trabalhador' }).click();
+  await expect(page.getByRole('form', { name: 'Novo perfil de trabalhador' })).toBeVisible();
   await page.getByPlaceholder('Competências: Django, React...').fill('Django');
   await page.getByPlaceholder('Experiência profissional').fill('2 anos');
-  await page.locator('form:has(input[placeholder="Competências: Django, React..."])').getByRole('button', { name: 'Criar perfil' }).click();
+  await page.getByRole('form', { name: 'Novo perfil de trabalhador' })
+    .getByRole('button', { name: 'Criar perfil de trabalhador' }).click();
   await expect(page.getByText('Perfil de trabalhador criado.')).toBeVisible();
-  // The previous employer's unsent form fields must not leak into this account.
+  await expect(page.getByRole('form', { name: 'Novo perfil de trabalhador' })).toHaveCount(0);
+  // Secondary role remains available, but is collapsed; no old employer fields leak.
+  await page.getByRole('button', { name: 'Adicionar perfil de empregador' }).click();
   await expect(page.getByPlaceholder('Nome da empresa')).toHaveValue('');
   await expect(page.getByPlaceholder('Localização')).toHaveValue('');
+  await page.getByRole('button', { name: 'Fechar formulário de empregador' }).click();
+  await expect(page.getByPlaceholder('Nome da empresa')).toHaveCount(0);
 
   await page.getByPlaceholder('Descreva a proposta').fill('Posso implementar o portal.');
   await page.getByRole('button', { name: 'Propor', exact: true }).click();
@@ -135,4 +154,36 @@ test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', asy
   await expect(page.getByText('REJECTED', { exact: true })).toBeVisible();
   await expect(page.getByText('Vigente', { exact: true })).toBeVisible();
   await page.screenshot({ path: 'artifacts/d54/06-versao-v3-rejeitada.png', fullPage: true });
+
+  // Adding an optional second role must not erase the worker's contracts or proposals.
+  await page.getByRole('button', { name: 'Adicionar perfil de empregador' }).click();
+  await page.getByPlaceholder('Nome da empresa').fill('Empresa adicional D56');
+  await page.getByPlaceholder('Localização').fill('Maputo');
+  await page.getByRole('form', { name: 'Novo perfil de empregador' })
+    .getByRole('button', { name: 'Criar perfil de empregador' }).click();
+  await expect(page.getByText('Perfil de empregador criado.')).toBeVisible();
+  await expect(page.getByRole('form', { name: 'Novo perfil de empregador' })).toHaveCount(0);
+  await expect(page.getByText('Proposta #', { exact: false }).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Contratação #[0-9]+ · ACTIVE/ })).toBeVisible();
+});
+
+test('D56: compact profile chooser supports a small screen and keyboard navigation', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await register(page, 'mobile_d56', 'Conta móvel D56', 'mobile.d56@example.test', '84 123 4599');
+  const profiles = page.getByRole('region', { name: 'Perfis da conta' });
+  await expect(profiles).toBeVisible();
+  await expect(profiles.getByRole('form')).toHaveCount(0);
+  const workerButton = profiles.getByRole('button', { name: 'Adicionar perfil de trabalhador' });
+  await expect(workerButton).toHaveAttribute('aria-expanded', 'false');
+  await workerButton.focus();
+  await page.keyboard.press('Enter');
+  await expect(profiles.getByRole('form', { name: 'Novo perfil de trabalhador' })).toBeVisible();
+  await expect(profiles.getByRole('form', { name: 'Novo perfil de empregador' })).toHaveCount(0);
+  const employerButton = profiles.getByRole('button', { name: 'Adicionar perfil de empregador' });
+  await employerButton.click();
+  await expect(profiles.getByRole('form', { name: 'Novo perfil de trabalhador' })).toHaveCount(0);
+  await expect(profiles.getByRole('form', { name: 'Novo perfil de empregador' })).toBeVisible();
+  await expect(employerButton).toHaveCount(0);
+  await profiles.getByRole('button', { name: 'Fechar formulário de empregador' }).click();
+  await expect(profiles.getByRole('form')).toHaveCount(0);
 });
