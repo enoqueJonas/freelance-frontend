@@ -78,7 +78,23 @@ export function RealDjangoFlow() {
     setEngagements([]);
     setProposals({});
     setMyProposals([]);
+    // Prevent one account's unsent form data from appearing after user switch.
+    setUsername('');
     setPassword('');
+    setName('');
+    setEmail('');
+    setPhone('');
+    setSkills('');
+    setExperience('');
+    setCompany('');
+    setAddress('');
+    setTitle('');
+    setDescription('');
+    setProposalText({});
+    setScope('');
+    setAmount('');
+    setDiagnosis(false);
+    setRejection({});
     setMode('login');
     setContractId(null);
     setReviewed({});
