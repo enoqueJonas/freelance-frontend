@@ -75,12 +75,23 @@ test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', asy
   await page.getByPlaceholder('Experiência profissional').fill('2 anos');
   await page.locator('form:has(input[placeholder="Competências: Django, React..."])').getByRole('button', { name: 'Criar perfil' }).click();
   await expect(page.getByText('Perfil de trabalhador criado.')).toBeVisible();
+  // The previous employer's unsent form fields must not leak into this account.
+  await expect(page.getByPlaceholder('Nome da empresa')).toHaveValue('');
+  await expect(page.getByPlaceholder('Localização')).toHaveValue('');
 
   await page.getByPlaceholder('Descreva a proposta').fill('Posso implementar o portal.');
   await page.getByRole('button', { name: 'Propor', exact: true }).click();
   await expect(page.getByText('Proposta submetida ao empregador.')).toBeVisible();
+  await expect(page.getByText('Proposta submetida · SUBMITTED')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Propor', exact: true })).toHaveCount(0);
+  await expect(page.getByText(/Proposta #[0-9]+: SUBMITTED/)).toBeVisible();
   await page.screenshot({ path: 'artifacts/d54/02-proposta-submetida.png', fullPage: true });
 
+  // State must come from Django after changing account, not an ephemeral UI flag.
+  await signOut(page);
+  await logIn(page, workerName);
+  await expect(page.getByText('Proposta submetida · SUBMITTED')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Propor', exact: true })).toHaveCount(0);
   await signOut(page);
   await logIn(page, employerName);
   await page.getByRole('button', { name: 'Aceitar proposta' }).click();
@@ -94,6 +105,8 @@ test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', asy
 
   await signOut(page);
   await logIn(page, workerName);
+  // The opportunity is now CLOSED: own ACCEPTED proposal must remain visible.
+  await expect(page.getByText(/Proposta #[0-9]+: ACCEPTED · Oportunidade: CLOSED/)).toBeVisible();
   await selectContract(page, 'PENDING_AGREEMENT');
   await acceptVersion(page, 1);
   await expect(page.getByRole('button', { name: /Contratação #[0-9]+ · ACTIVE/ })).toBeVisible();
