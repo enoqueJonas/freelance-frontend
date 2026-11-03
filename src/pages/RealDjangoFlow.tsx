@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ApiError, realApi } from '../services/realApi';
-import type { Actor, Worker, Employer, Opportunity, Proposal, Engagement, AgreementVersion } from '../services/realApi';
+import type { Actor, Worker, Employer, Opportunity, Proposal, Engagement, AgreementVersion, OwnedProposal } from '../services/realApi';
 
 const field = 'w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 const button = 'rounded-xl bg-blue-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 hover:bg-blue-800';
@@ -15,6 +15,7 @@ export function RealDjangoFlow() {
   const [employer, setEmployer] = useState<Employer | null>(null);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [proposals, setProposals] = useState<Record<number, Proposal[]>>({});
+  const [myProposals, setMyProposals] = useState<OwnedProposal[]>([]);
   const [engagements, setEngagements] = useState<Engagement[]>([]);
   const [mode, setMode] = useState<'login'|'register'>('login');
   const [username, setUsername] = useState('');
@@ -40,7 +41,7 @@ export function RealDjangoFlow() {
   const [error, setError] = useState('');
 
   async function reload(token: string) {
-    const [u, opps, contracts, w, e] = await Promise.all([
+    const [u, opps, contracts, w, e, owned] = await Promise.all([
       realApi.me(token),
       realApi.opportunities(token),
       realApi.engagements(token),
@@ -52,6 +53,7 @@ export function RealDjangoFlow() {
         if (err instanceof ApiError && err.status === 404) return null;
         throw err;
       }),
+      realApi.myProposals(token),
     ]);
     const incoming = await Promise.all(
       opps.filter(o => o.employer_user_id === u.id).map(async o => ({
@@ -64,6 +66,7 @@ export function RealDjangoFlow() {
     setWorker(w);
     setEmployer(e);
     setProposals(Object.fromEntries(incoming.map(x => [x.id,x.rows])));
+    setMyProposals(owned);
   }
 
   function signOut() {
@@ -74,6 +77,7 @@ export function RealDjangoFlow() {
     setOpportunities([]);
     setEngagements([]);
     setProposals({});
+    setMyProposals([]);
     setPassword('');
     setMode('login');
     setContractId(null);
@@ -122,6 +126,7 @@ export function RealDjangoFlow() {
   const mine = actor ? opportunities.filter(o => o.employer_user_id === actor.id) : [];
   const others = actor ? opportunities.filter(o => o.employer_user_id !== actor.id && o.status === 'OPEN') : [];
   const activeContract = engagements.find(e => e.id === contractId) || null;
+  const myProposalByOpportunity = new Map(myProposals.map(p => [p.opportunity_id, p]));
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -229,7 +234,12 @@ export function RealDjangoFlow() {
                   <div className="rounded-xl border p-4 space-y-2" key={o.id}>
                     <p className="font-semibold">{o.title} <span className="text-xs text-slate-400">#{o.id}</span></p>
                     <p className="text-sm text-slate-600 whitespace-pre-wrap">{o.description}</p>
-                    {worker && (
+                    {worker && myProposalByOpportunity.has(o.id) && (
+                      <p className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm text-blue-800" data-testid={'proposal-status-'+o.id}>
+                        Proposta submetida · {myProposalByOpportunity.get(o.id)?.status}
+                      </p>
+                    )}
+                    {worker && !myProposalByOpportunity.has(o.id) && (
                       <form className="flex gap-2" onSubmit={e=>{e.preventDefault();void execute(t=>realApi.submitProposal(t,o.id,proposalText[o.id]||''),'Proposta submetida ao empregador.');}}>
                         <input className={field} required placeholder="Descreva a proposta" value={proposalText[o.id]||''} onChange={e=>setProposalText(prev=>({...prev,[o.id]:e.target.value}))}/>
                         <button type="submit" className={button} disabled={busy}>Propor</button>
@@ -260,6 +270,19 @@ export function RealDjangoFlow() {
                 ))}
               </div>
             </section>
+
+            {worker && (
+              <section className="rounded-2xl border bg-white p-5 space-y-3" aria-label="Minhas propostas">
+                <h2 className="font-bold text-lg">Minhas propostas</h2>
+                {myProposals.length===0 && <p className="text-sm text-slate-500">Ainda não submeteu propostas.</p>}
+                {myProposals.map(p=>(
+                  <article className="rounded-lg border bg-slate-50 p-3" key={p.id} data-testid={'my-proposal-'+p.id}>
+                    <p className="text-sm font-semibold">{p.opportunity_title}</p>
+                    <p className="text-sm text-slate-600">Proposta #{p.id}: {p.status} · Oportunidade: {p.opportunity_status}</p>
+                  </article>
+                ))}
+              </section>
+            )}
 
             <section className="rounded-2xl border bg-white p-5 space-y-4">
               <h2 className="font-bold text-lg">4. Contratações e acordos versionados</h2>
