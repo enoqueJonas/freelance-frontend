@@ -75,6 +75,9 @@ test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', asy
   await page.getByPlaceholder('Experiência profissional').fill('2 anos');
   await page.locator('form:has(input[placeholder="Competências: Django, React..."])').getByRole('button', { name: 'Criar perfil' }).click();
   await expect(page.getByText('Perfil de trabalhador criado.')).toBeVisible();
+  // The previous employer's unsent form fields must not leak into this account.
+  await expect(page.getByPlaceholder('Nome da empresa')).toHaveValue('');
+  await expect(page.getByPlaceholder('Localização')).toHaveValue('');
 
   await page.getByPlaceholder('Descreva a proposta').fill('Posso implementar o portal.');
   await page.getByRole('button', { name: 'Propor', exact: true }).click();
