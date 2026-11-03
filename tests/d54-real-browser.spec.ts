@@ -73,6 +73,7 @@ test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', asy
   await page.screenshot({ path: 'artifacts/d54/08-perfil-empregador-activo.png', fullPage: true });
   await expect(page.getByRole('form', { name: 'Novo perfil de empregador' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Adicionar perfil de trabalhador' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Criar oportunidade' })).toBeVisible();
 
   await page.getByPlaceholder('Título').fill('Portal institucional D54');
   await page.getByPlaceholder('Descrição').fill('Desenvolvimento web e revisão.');
@@ -93,6 +94,8 @@ test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', asy
     .getByRole('button', { name: 'Criar perfil de trabalhador' }).click();
   await expect(page.getByText('Perfil de trabalhador criado.')).toBeVisible();
   await expect(page.getByRole('form', { name: 'Novo perfil de trabalhador' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'As minhas oportunidades e propostas' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Contratações e acordos versionados' })).toBeVisible();
   // Secondary role remains available, but is collapsed; no old employer fields leak.
   await page.getByRole('button', { name: 'Adicionar perfil de empregador' }).click();
   await expect(page.getByPlaceholder('Nome da empresa')).toHaveValue('');
@@ -167,6 +170,7 @@ test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', asy
   await expect(page.getByRole('form', { name: 'Novo perfil de empregador' })).toHaveCount(0);
   await expect(page.getByText('Proposta #', { exact: false }).first()).toBeVisible();
   await expect(page.getByRole('button', { name: /Contratação #[0-9]+ · ACTIVE/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'As minhas oportunidades e propostas' })).toBeVisible();
 });
 
 test('D56: compact profile chooser supports a small screen and keyboard navigation', async ({ page }) => {
@@ -176,6 +180,8 @@ test('D56: compact profile chooser supports a small screen and keyboard navigati
   const profiles = page.getByRole('region', { name: 'Perfis da conta' });
   await expect(profiles).toBeVisible();
   await expect(profiles.getByRole('form')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'As minhas oportunidades e propostas' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Contratações e acordos versionados' })).toHaveCount(0);
   const workerButton = profiles.getByRole('button', { name: 'Adicionar perfil de trabalhador' });
   await expect(workerButton).toHaveAttribute('aria-expanded', 'false');
   await workerButton.focus();
