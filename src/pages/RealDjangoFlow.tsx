@@ -151,7 +151,7 @@ export function RealDjangoFlow() {
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4 py-5 flex items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-bold tracking-widest text-blue-700 uppercase">ConecTA · Integração D53</p>
+            <p className="text-xs font-bold tracking-widest text-blue-700 uppercase">ConecTA · Fluxo API real</p>
             <h1 className="text-2xl font-bold mt-1">Fluxo real de contratação</h1>
             <p className="text-xs text-slate-500 mt-1">React → API Django → Base de dados · Sem mockApi</p>
           </div>
@@ -161,7 +161,7 @@ export function RealDjangoFlow() {
 
       <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-          <strong>Protótipo técnico, não produção.</strong> Este percurso utiliza endpoints reais D50–D53.
+          <strong>Protótipo técnico, não produção.</strong> Este percurso utiliza endpoints reais do backend Django.
           As restantes páginas da aplicação continuam demonstrativas e não devem ser confundidas com
           operações validadas. Pagamentos, entregas, disputas e assinaturas qualificadas não estão implementados.
           A sessão desta página termina ao actualizar o browser.
