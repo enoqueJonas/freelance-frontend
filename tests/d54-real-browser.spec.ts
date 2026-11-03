@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { mkdirSync } from 'node:fs';
 
 const password = process.env.E2E_PASSWORD;
 if (!password) throw new Error('E2E_PASSWORD must be supplied by isolated CI');
@@ -53,6 +54,7 @@ async function acceptVersion(page: Page, number: number) {
 }
 
 test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', async ({ page }) => {
+  mkdirSync('artifacts/d54', { recursive: true });
   await register(page, employerName, 'Empregador D54', 'employer.d54@example.test', '84 123 4567');
   await page.getByPlaceholder('Nome da empresa').fill('Empresa D54');
   await page.getByPlaceholder('Localização').fill('Maputo');
@@ -65,6 +67,7 @@ test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', asy
   await expect(page.getByText('Oportunidade guardada como rascunho.')).toBeVisible();
   await page.getByRole('button', { name: 'Publicar', exact: true }).click();
   await expect(page.getByText('Oportunidade publicada.')).toBeVisible();
+  await page.screenshot({ path: 'artifacts/d54/01-oportunidade-publicada.png', fullPage: true });
 
   await signOut(page);
   await register(page, workerName, 'Trabalhador D54', 'worker.d54@example.test', '82 123 4567');
@@ -76,12 +79,14 @@ test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', asy
   await page.getByPlaceholder('Descreva a proposta').fill('Posso implementar o portal.');
   await page.getByRole('button', { name: 'Propor', exact: true }).click();
   await expect(page.getByText('Proposta submetida ao empregador.')).toBeVisible();
+  await page.screenshot({ path: 'artifacts/d54/02-proposta-submetida.png', fullPage: true });
 
   await signOut(page);
   await logIn(page, employerName);
   await page.getByRole('button', { name: 'Aceitar proposta' }).click();
   await expect(page.getByText('Proposta aceite; contratação pendente criada.')).toBeVisible();
   await selectContract(page, 'PENDING_AGREEMENT');
+  await page.screenshot({ path: 'artifacts/d54/03-contratacao-pendente.png', fullPage: true });
 
   await submitVersion(page, 'v1: portal institucional', '25000.00');
   await acceptVersion(page, 1);
@@ -92,6 +97,7 @@ test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', asy
   await selectContract(page, 'PENDING_AGREEMENT');
   await acceptVersion(page, 1);
   await expect(page.getByRole('button', { name: /Contratação #[0-9]+ · ACTIVE/ })).toBeVisible();
+  await page.screenshot({ path: 'artifacts/d54/04-acordo-v1-activo.png', fullPage: true });
 
   await submitVersion(page, 'v2: portal e manutenção', '30000.00');
   await expect(page.getByText('Vigente', { exact: true })).toBeVisible();
@@ -104,6 +110,7 @@ test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', asy
   await acceptVersion(page, 2);
   await expect(page.getByText('SUPERSEDED', { exact: true })).toBeVisible();
   await expect(page.getByText('ACCEPTED', { exact: true })).toBeVisible();
+  await page.screenshot({ path: 'artifacts/d54/05-versao-v2-vigente.png', fullPage: true });
 
   await submitVersion(page, 'v3: condições alternativas', '31000.00');
   await signOut(page);
@@ -114,4 +121,5 @@ test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', asy
   await expect(page.getByText('Alteração rejeitada, acordo anterior preservado.')).toBeVisible();
   await expect(page.getByText('REJECTED', { exact: true })).toBeVisible();
   await expect(page.getByText('Vigente', { exact: true })).toBeVisible();
+  await page.screenshot({ path: 'artifacts/d54/06-versao-v3-rejeitada.png', fullPage: true });
 });
