@@ -56,7 +56,7 @@ test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', asy
   await register(page, employerName, 'Empregador D54', 'employer.d54@example.test', '84 123 4567');
   await page.getByPlaceholder('Nome da empresa').fill('Empresa D54');
   await page.getByPlaceholder('Localização').fill('Maputo');
-  await page.getByRole('button', { name: 'Criar perfil' }).click();
+  await page.locator('form:has(input[placeholder="Nome da empresa"])').getByRole('button', { name: 'Criar perfil' }).click();
   await expect(page.getByText('Perfil de empregador criado.')).toBeVisible();
 
   await page.getByPlaceholder('Título').fill('Portal institucional D54');
@@ -70,7 +70,7 @@ test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', asy
   await register(page, workerName, 'Trabalhador D54', 'worker.d54@example.test', '82 123 4567');
   await page.getByPlaceholder('Competências: Django, React...').fill('Django');
   await page.getByPlaceholder('Experiência profissional').fill('2 anos');
-  await page.getByRole('button', { name: 'Criar perfil' }).click();
+  await page.locator('form:has(input[placeholder="Competências: Django, React..."])').getByRole('button', { name: 'Criar perfil' }).click();
   await expect(page.getByText('Perfil de trabalhador criado.')).toBeVisible();
 
   await page.getByPlaceholder('Descreva a proposta').fill('Posso implementar o portal.');
