@@ -56,6 +56,7 @@ async function acceptVersion(page: Page, number: number) {
 test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', async ({ page }) => {
   mkdirSync('artifacts/d54', { recursive: true });
   await register(page, employerName, 'Empregador D54', 'employer.d54@example.test', '84 123 4567');
+  await page.screenshot({ path: 'artifacts/d54/07-opcoes-perfil-fechadas.png', fullPage: true });
   // The account chooser must not open both role forms before the user asks.
   await expect(page.getByPlaceholder('Nome da empresa')).toHaveCount(0);
   await expect(page.getByPlaceholder('Competências: Django, React...')).toHaveCount(0);
@@ -69,6 +70,7 @@ test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', asy
   await page.getByRole('form', { name: 'Novo perfil de empregador' })
     .getByRole('button', { name: 'Criar perfil de empregador' }).click();
   await expect(page.getByText('Perfil de empregador criado.')).toBeVisible();
+  await page.screenshot({ path: 'artifacts/d54/08-perfil-empregador-activo.png', fullPage: true });
   await expect(page.getByRole('form', { name: 'Novo perfil de empregador' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Adicionar perfil de trabalhador' })).toBeVisible();
 
@@ -168,6 +170,7 @@ test('D54: two JWT users, real opportunity, proposal, v1 and v2 agreements', asy
 });
 
 test('D56: compact profile chooser supports a small screen and keyboard navigation', async ({ page }) => {
+  mkdirSync('artifacts/d54', { recursive: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await register(page, 'mobile_d56', 'Conta móvel D56', 'mobile.d56@example.test', '84 123 4599');
   const profiles = page.getByRole('region', { name: 'Perfis da conta' });
@@ -186,4 +189,5 @@ test('D56: compact profile chooser supports a small screen and keyboard navigati
   await expect(employerButton).toHaveCount(0);
   await profiles.getByRole('button', { name: 'Fechar formulário de empregador' }).click();
   await expect(profiles.getByRole('form')).toHaveCount(0);
+  await page.screenshot({ path: 'artifacts/d54/09-perfis-mobile.png', fullPage: true });
 });
