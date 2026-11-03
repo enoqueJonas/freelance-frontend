@@ -23,9 +23,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
       - run: npm ci
+      # The D54 Playwright test source is included by the project TypeScript checker.
+      - run: npm install --no-save --ignore-scripts @playwright/test@1.56.1
       - name: Test API integration client (mock fetch only, no real browser)
         run: npx tsx --test tests/real-api-client.test.ts
       - name: Type-check entire React project
