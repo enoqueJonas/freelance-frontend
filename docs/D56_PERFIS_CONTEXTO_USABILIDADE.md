@@ -26,7 +26,11 @@ O Playwright mantém o cenário integrado D54/D55 (oportunidade, proposta, v1/v2
 
 O workflow `.github/workflows/d54-browser-e2e.yml` arranca **React, Django e SQLite de ensaio** e utiliza o backend fixado no commit D55 `3752c14e3cfef7bfd20a4de7a70f762fcf51ea08`. Além das seis imagens de contratação, solicita três capturas reais adicionais do onboarding contextual (perfil inicialmente fechado, perfil de empregador activo e viewport móvel).
 
-**Não declarar testes aprovados antes de examinar os logs** da revisão exacta deste PR.
+**Resultado confirmado na revisão final:** [GitHub Actions D56 #41611652980](https://github.com/enoqueJonas/freelance-frontend/actions/runs/41611652980): **2/2 testes Chromium aprovados**, incluindo o percurso real de contratação e o ensaio móvel com teclado; TypeScript e build concluídos. A verificação independente de cliente HTTP e TypeScript/build também passou em [CI #41611653340](https://github.com/enoqueJonas/freelance-frontend/actions/runs/41611653340).
+
+As **nove capturas originais** foram arquivadas no [artefacto GitHub #13218388955](https://github.com/enoqueJonas/freelance-frontend/actions/runs/41611652980/artifacts/13218388955) (disponível até 03-12-2026) e inspeccionadas. As três novas imagens da gestão de perfis documentam as opções inicialmente fechadas, o estado Employer activo e a vista estreita de 390 px. Os novos painéis não aplicáveis e a numeração obsoleta já foram retirados e verificados no run final.
+
+**Observação visual residual (não bloqueadora da D56):** no viewport móvel 390×844, a primeira acção de activação ainda fica parcialmente abaixo da primeira área visível, porque o aviso extenso de «Protótipo técnico, não produção» e o cabeçalho ocupam muito espaço. Não omitir esse aviso; uma melhoria posterior deve preservar a transparência e reduzir a altura inicial com uma apresentação compacta. A existência de `aria-expanded` e testes de teclado não permite declarar conformidade WCAG ou boa usabilidade sem avaliação específica.
 
 ## Escopo científico
 
