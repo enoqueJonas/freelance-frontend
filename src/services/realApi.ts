@@ -16,6 +16,11 @@ export type Proposal = {
   worker_name: string; description: string;
   status: 'SUBMITTED' | 'ACCEPTED' | 'REJECTED'
 };
+export type OwnedProposal = {
+  id: number; opportunity_id: number; opportunity_title: string;
+  opportunity_status: 'DRAFT' | 'OPEN' | 'CLOSED';
+  description: string; status: 'SUBMITTED' | 'ACCEPTED' | 'REJECTED';
+};
 export type AgreementVersion = {
   id: number; number: number;
   status: 'PROPOSED' | 'ACCEPTED' | 'SUPERSEDED' | 'REJECTED';
@@ -84,6 +89,7 @@ export const realApi = {
     request<Opportunity>('/api/marketplace/opportunities/',{method:'POST',access,body:data}),
   publishOpportunity: (access:string,id:number) =>
     request<Opportunity>('/api/marketplace/opportunities/'+id+'/publish/',{method:'POST',access}),
+  myProposals: (access:string) => request<OwnedProposal[]>('/api/marketplace/proposals/mine/',{access}),
   proposalsForOpportunity: (access:string,id:number) =>
     request<Proposal[]>('/api/marketplace/opportunities/'+id+'/proposals/',{access}),
   submitProposal: (access:string,id:number,description:string) =>
