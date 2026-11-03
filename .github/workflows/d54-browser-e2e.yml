@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: enoqueJonas/freelance-backend
-          ref: feat/d53-ui-api-read-models
+          ref: ced54117d2db0db9e049086fcc975dd4f36807e0 # backend D53 verified at 71/71
           path: backend
           persist-credentials: false
       - name: Set up Node
@@ -73,6 +73,14 @@ jobs:
           npm run build
       - name: Run actual Chromium browser with two Django users
         run: npx playwright test -c playwright.d54.config.ts
+      - name: Upload genuine browser evidence from synthetic test data
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d54-real-browser-screenshots
+          path: artifacts/d54/*.png
+          if-no-files-found: error
+          retention-days: 30
       - name: Print server diagnostics on failure
         if: failure()
         run: |
