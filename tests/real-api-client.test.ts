@@ -65,3 +65,29 @@ test('HTML returned for /api is rejected as misconfigured proxy', async () => {
     error instanceof ApiError && error.message.includes('proxy')
   );
 });
+
+
+test('owned proposals are fetched only using authenticated /mine/ endpoint', async () => {
+  globalThis.fetch = async (input, init) => {
+    assert.equal(String(input), '/api/marketplace/proposals/mine/');
+    assert.equal(init?.method, 'GET');
+    assert.equal((init?.headers as Record<string,string>).Authorization, 'Bearer worker-jwt');
+    return new Response(JSON.stringify([{
+      id: 4, opportunity_id: 7, opportunity_title: 'Portal',
+      opportunity_status: 'CLOSED', description: 'Proposta enviada',
+      status: 'ACCEPTED',
+    }]), { status: 200 });
+  };
+  const rows = await realApi.myProposals('worker-jwt');
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].status, 'ACCEPTED');
+  assert.equal(rows[0].opportunity_status, 'CLOSED');
+});
+
+test('owned proposal load fails closed when API rejects token', async () => {
+  globalThis.fetch = async () =>
+    new Response(JSON.stringify({ detail: 'Authentication credentials were not provided.' }), { status: 401 });
+  await assert.rejects(realApi.myProposals('expired'), (error: unknown) =>
+    error instanceof ApiError && error.status === 401
+  );
+});
