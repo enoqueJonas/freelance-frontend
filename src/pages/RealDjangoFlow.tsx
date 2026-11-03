@@ -126,7 +126,9 @@ export function RealDjangoFlow() {
   const mine = actor ? opportunities.filter(o => o.employer_user_id === actor.id) : [];
   const others = actor ? opportunities.filter(o => o.employer_user_id !== actor.id && o.status === 'OPEN') : [];
   const activeContract = engagements.find(e => e.id === contractId) || null;
-  const myProposalByOpportunity = new Map(myProposals.map(p => [p.opportunity_id, p]));
+  const myProposalByOpportunity = new Map<number, OwnedProposal>(
+    myProposals.map(p => [p.opportunity_id, p] as [number, OwnedProposal])
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
