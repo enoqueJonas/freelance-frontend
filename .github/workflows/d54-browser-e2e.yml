@@ -1,8 +1,8 @@
-name: D54 Real Browser E2E
+name: D56 Contextual Profiles + Real Browser E2E
 
 on:
   push:
-    branches: [fix/d55-proposal-persistent-state]
+    branches: [feat/d56-contextual-profile-onboarding]
   pull_request:
     paths:
       - "src/**"
@@ -77,7 +77,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: d55-real-browser-screenshots
+          name: d56-profile-browser-screenshots
           path: artifacts/d54/*.png
           if-no-files-found: error
           retention-days: 30
@@ -90,7 +90,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: d54-browser-failure-screenshots
+          name: d56-browser-failure-screenshots
           path: test-results/
           if-no-files-found: ignore
           retention-days: 3

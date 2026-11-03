@@ -18,6 +18,7 @@ export function RealDjangoFlow() {
   const [myProposals, setMyProposals] = useState<OwnedProposal[]>([]);
   const [engagements, setEngagements] = useState<Engagement[]>([]);
   const [mode, setMode] = useState<'login'|'register'>('login');
+  const [profileEditor, setProfileEditor] = useState<'worker'|'employer'|null>(null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -67,6 +68,10 @@ export function RealDjangoFlow() {
     setEmployer(e);
     setProposals(Object.fromEntries(incoming.map(x => [x.id,x.rows])));
     setMyProposals(owned);
+    // Close a successful creation panel only after the API confirms the profile.
+    setProfileEditor(current =>
+      (current === 'worker' && w) || (current === 'employer' && e) ? null : current
+    );
   }
 
   function signOut() {
@@ -96,6 +101,7 @@ export function RealDjangoFlow() {
     setDiagnosis(false);
     setRejection({});
     setMode('login');
+    setProfileEditor(null);
     setContractId(null);
     setReviewed({});
     setError('');
@@ -128,6 +134,7 @@ export function RealDjangoFlow() {
       // Refresh token is deliberately not stored or used.
       await reload(auth.access);
       setAccess(auth.access);
+      setProfileEditor(null);
       setPassword('');
       setFeedback('Sessão real iniciada. Os dados abaixo vêm da base de dados Django.');
     } catch (err) {
@@ -212,30 +219,88 @@ export function RealDjangoFlow() {
               </div>
             </section>
 
-            {(!worker || !employer) && (
-              <section className="grid gap-4 md:grid-cols-2">
-                {!worker && (
-                  <form className="rounded-2xl bg-white border p-5 space-y-3" onSubmit={e=>{e.preventDefault();void execute(t=>realApi.createWorker(t,{skills,experience}),'Perfil de trabalhador criado.');}}>
-                    <h2 className="font-bold text-lg">Activar perfil de trabalhador</h2>
+            <section aria-label="Perfis da conta" className="rounded-2xl border bg-white p-5 space-y-4" data-testid="profile-management">
+              <div>
+                <h2 className="font-bold text-lg">Perfis da conta</h2>
+                <p className="text-sm text-slate-600 mt-1">
+                  {!worker && !employer
+                    ? 'Escolha como pretende participar. Pode activar o outro perfil mais tarde, na mesma conta.'
+                    : 'A gestão do segundo perfil é opcional e não interrompe a sua actividade actual.'}
+                </p>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="font-semibold">Trabalhador</h3>
+                    <span className={worker ? 'rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-800' : 'rounded-full bg-slate-200 px-2 py-1 text-xs font-medium text-slate-600'}>
+                      {worker ? 'Activo' : 'Não activado'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-600">
+                    {worker ? 'Pode apresentar propostas e acompanhar contratações.' : 'Para apresentar propostas e prestar serviços.'}
+                  </p>
+                  {!worker && (
+                    <button type="button" className={secondary}
+                      aria-expanded={profileEditor === 'worker'}
+                      aria-controls="worker-profile-form"
+                      onClick={() => setProfileEditor(current => current === 'worker' ? null : 'worker')}>
+                      {profileEditor === 'worker' ? 'Fechar formulário de trabalhador' : 'Adicionar perfil de trabalhador'}
+                    </button>
+                  )}
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="font-semibold">Empregador</h3>
+                    <span className={employer ? 'rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-800' : 'rounded-full bg-slate-200 px-2 py-1 text-xs font-medium text-slate-600'}>
+                      {employer ? 'Activo' : 'Não activado'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-600">
+                    {employer ? 'Pode publicar oportunidades e avaliar propostas.' : 'Para publicar oportunidades e contratar serviços.'}
+                  </p>
+                  {!employer && (
+                    <button type="button" className={secondary}
+                      aria-expanded={profileEditor === 'employer'}
+                      aria-controls="employer-profile-form"
+                      onClick={() => setProfileEditor(current => current === 'employer' ? null : 'employer')}>
+                      {profileEditor === 'employer' ? 'Fechar formulário de empregador' : 'Adicionar perfil de empregador'}
+                    </button>
+                  )}
+                </div>
+              </div>
+              {profileEditor === 'worker' && !worker && (
+                <form id="worker-profile-form" aria-label="Novo perfil de trabalhador"
+                  className="rounded-xl border border-blue-200 bg-blue-50/40 p-4 space-y-3"
+                  onSubmit={e=>{e.preventDefault();void execute(t=>realApi.createWorker(t,{skills,experience}),'Perfil de trabalhador criado.');}}>
+                  <h3 className="font-semibold">Dados do perfil de trabalhador</h3>
+                  <label className="block text-sm font-medium">Competências
                     <input className={field} required placeholder="Competências: Django, React..." value={skills} onChange={e=>setSkills(e.target.value)} />
+                  </label>
+                  <label className="block text-sm font-medium">Experiência profissional
                     <input className={field} required placeholder="Experiência profissional" value={experience} onChange={e=>setExperience(e.target.value)} />
-                    <button type="submit" className={button} disabled={busy}>Criar perfil</button>
-                  </form>
-                )}
-                {!employer && (
-                  <form className="rounded-2xl bg-white border p-5 space-y-3" onSubmit={e=>{e.preventDefault();void execute(t=>realApi.createEmployer(t,{company_name:company,address}),'Perfil de empregador criado.');}}>
-                    <h2 className="font-bold text-lg">Activar perfil de empregador</h2>
+                  </label>
+                  <button type="submit" className={button} disabled={busy}>Criar perfil de trabalhador</button>
+                </form>
+              )}
+              {profileEditor === 'employer' && !employer && (
+                <form id="employer-profile-form" aria-label="Novo perfil de empregador"
+                  className="rounded-xl border border-blue-200 bg-blue-50/40 p-4 space-y-3"
+                  onSubmit={e=>{e.preventDefault();void execute(t=>realApi.createEmployer(t,{company_name:company,address}),'Perfil de empregador criado.');}}>
+                  <h3 className="font-semibold">Dados do perfil de empregador</h3>
+                  <label className="block text-sm font-medium">Nome da empresa
                     <input className={field} required placeholder="Nome da empresa" value={company} onChange={e=>setCompany(e.target.value)} />
+                  </label>
+                  <label className="block text-sm font-medium">Localização
                     <input className={field} required placeholder="Localização" value={address} onChange={e=>setAddress(e.target.value)} />
-                    <button type="submit" className={button} disabled={busy}>Criar perfil</button>
-                  </form>
-                )}
-              </section>
-            )}
+                  </label>
+                  <button type="submit" className={button} disabled={busy}>Criar perfil de empregador</button>
+                </form>
+              )}
+            </section>
 
             {employer && (
               <section className="rounded-2xl border bg-white p-5">
-                <h2 className="font-bold text-lg mb-3">1. Criar oportunidade real</h2>
+                <h2 className="font-bold text-lg mb-3">Criar oportunidade</h2>
                 <form className="grid gap-3 md:grid-cols-[1fr_2fr_auto]" onSubmit={e=>{e.preventDefault();void execute(t=>realApi.createOpportunity(t,{title,description}),'Oportunidade guardada como rascunho.');}}>
                   <input className={field} required placeholder="Título" value={title} onChange={e=>setTitle(e.target.value)} />
                   <input className={field} required placeholder="Descrição" value={description} onChange={e=>setDescription(e.target.value)} />
@@ -244,9 +309,9 @@ export function RealDjangoFlow() {
               </section>
             )}
 
-            <section className="grid gap-4 lg:grid-cols-2">
+            <section className={employer ? "grid gap-4 lg:grid-cols-2" : "grid gap-4"}>
               <div className="rounded-2xl border bg-white p-5 space-y-3">
-                <h2 className="font-bold text-lg">2. Oportunidades disponíveis</h2>
+                <h2 className="font-bold text-lg">Oportunidades disponíveis</h2>
                 {others.length===0 && <p className="text-sm text-slate-500">Sem oportunidades abertas de outras contas.</p>}
                 {others.map(o=>(
                   <div className="rounded-xl border p-4 space-y-2" key={o.id}>
@@ -267,8 +332,9 @@ export function RealDjangoFlow() {
                   </div>
                 ))}
               </div>
-              <div className="rounded-2xl border bg-white p-5 space-y-3">
-                <h2 className="font-bold text-lg">3. As minhas oportunidades e propostas</h2>
+              {employer && (
+                <div className="rounded-2xl border bg-white p-5 space-y-3">
+                  <h2 className="font-bold text-lg">As minhas oportunidades e propostas</h2>
                 {mine.length===0 && <p className="text-sm text-slate-500">Nenhuma oportunidade criada.</p>}
                 {mine.map(o=>(
                   <div className="rounded-xl border p-4 space-y-3" key={o.id}>
@@ -286,7 +352,8 @@ export function RealDjangoFlow() {
                     ))}
                   </div>
                 ))}
-              </div>
+                </div>
+              )}
             </section>
 
             {worker && (
@@ -302,9 +369,12 @@ export function RealDjangoFlow() {
               </section>
             )}
 
-            <section className="rounded-2xl border bg-white p-5 space-y-4">
-              <h2 className="font-bold text-lg">4. Contratações e acordos versionados</h2>
-              {engagements.length===0 && <p className="text-sm text-slate-500">Sem contratações associadas a esta conta. Aceite uma proposta e entre com a outra conta para rever os termos.</p>}
+            {(worker || employer) && (
+              <section className="rounded-2xl border bg-white p-5 space-y-4">
+              <h2 className="font-bold text-lg">Contratações e acordos versionados</h2>
+              {engagements.length===0 && <p className="text-sm text-slate-500">{employer
+                ? 'Ainda não existem contratações. Quando receber propostas, pode seleccionar um trabalhador.'
+                : 'Ainda não existem contratações. Submeta uma proposta e acompanhe a decisão do empregador.'}</p>}
               <div className="flex flex-wrap gap-2">
                 {engagements.map(e=>(
                   <button key={e.id} className={contractId===e.id?button:secondary} onClick={()=>setContractId(e.id)}>
@@ -362,7 +432,8 @@ export function RealDjangoFlow() {
                   </div>
                 </div>
               )}
-            </section>
+              </section>
+            )}
           </>
         )}
       </main>
