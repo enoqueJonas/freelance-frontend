@@ -39,7 +39,7 @@ const INITIAL_USERS: User[] = [
   { id: 3, username: 'nelson_sysob', email: 'nelson@outlook.co.mz', first_name: 'Nelson', last_name: 'Macuácua', role: 'worker', is_verified: false, date_joined: '2026-05-10' },
   { id: 4, username: 'maputo_digital', email: 'vagas@maputodigital.co.mz', first_name: 'Maputo', last_name: 'Digital', role: 'employer', is_verified: true, date_joined: '2026-01-05' },
   { id: 5, username: 'inove_mz', email: 'geral@inovemz.com', first_name: 'Inove', last_name: 'Sistemas', role: 'employer', is_verified: true, date_joined: '2026-03-20' },
-  { id: 6, username: 'admin_serviplus', email: 'admin@serviplus.co.mz', first_name: 'Admin', last_name: 'ServiPlus', role: 'admin', is_verified: true, date_joined: '2025-12-01' }
+  { id: 6, username: 'admin_conecta', email: 'admin@conecta.test', first_name: 'Admin', last_name: 'ConecTA', role: 'admin', is_verified: true, date_joined: '2025-12-01' }
 ];
 
 const INITIAL_WORKERS: WorkerProfile[] = [
@@ -202,7 +202,7 @@ const INITIAL_MESSAGES: Message[] = [
 const INITIAL_NOTIFICATIONS: Notification[] = [
   { id: 1, userId: 1, text: 'O empregador Maputo Digital enviou uma mensagem sobre o projeto Portal E-commerce.', isRead: false, createdAt: '2026-05-22T09:01:00Z', type: 'message' },
   { id: 2, userId: 4, text: 'Nova proposta recebida de Carlos Tembe para "Desenvolvimento de Portal E-commerce Local".', isRead: true, createdAt: '2026-05-21T11:01:00Z', type: 'proposal' },
-  { id: 3, userId: 3, text: 'Os seus documentos de identidade foram recebidos e estão aguardando revisão editorial da equipe do ServiPlus.', isRead: false, createdAt: '2026-05-10T12:00:00Z', type: 'verification' }
+  { id: 3, userId: 3, text: 'Os seus documentos de identidade foram recebidos e estão aguardando revisão editorial da equipe do ConecTA.', isRead: false, createdAt: '2026-05-10T12:00:00Z', type: 'verification' }
 ];
 
 const INITIAL_REVIEWS: Review[] = [
@@ -349,7 +349,7 @@ export const mockApi = {
       notifications.unshift({
         id: notifications.length + 1,
         userId: newUser.id,
-        text: `Bem-vindo ao ServiPlus, ${newUser.first_name}! Por favor, faça o upload dos seus documentos de identificação ou registo oficial para verificar a sua conta e aceder a todas as funcionalidades.`,
+        text: `Bem-vindo ao ConecTA, ${newUser.first_name}! Por favor, faça o upload dos seus documentos de identificação ou registo oficial para verificar a sua conta e aceder a todas as funcionalidades.`,
         isRead: false,
         createdAt: new Date().toISOString(),
         type: 'verification'
