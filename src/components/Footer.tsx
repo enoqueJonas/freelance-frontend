@@ -9,7 +9,7 @@ import { ShieldCheck, Mail, MapPin, Globe, CreditCard } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="bg-gray-905 bg-zinc-900 text-gray-300">
+    <footer className="bg-[#102C35] text-[#BDCDCC]">
       {/* Upper footer content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -17,7 +17,7 @@ export const Footer: React.FC = () => {
           {/* Col 1: About the platform */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-extrabold text-lg shadow">
+              <div className="w-8 h-8 rounded-lg bg-[#D9F781] flex items-center justify-center text-[#123943] font-extrabold text-lg shadow">
                 CT
               </div>
               <span className="font-sans font-bold text-lg text-white">
@@ -119,7 +119,7 @@ export const Footer: React.FC = () => {
       {/* Lower Copyright Area */}
       <div className="border-t border-zinc-800 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center text-xs text-gray-500 gap-4">
-          <p>© {new Date().getFullYear()} ConecTA Maputo. Todos os direitos reservados.</p>
+          <p>© {new Date().getFullYear()} ConecTA · Protótipo académico em demonstração.</p>
           <div className="flex gap-4">
             <span className="hover:text-gray-400 cursor-pointer">Termos de Serviço</span>
             <span>•</span>
