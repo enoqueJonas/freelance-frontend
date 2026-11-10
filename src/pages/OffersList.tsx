@@ -168,10 +168,10 @@ export const OffersList: React.FC = () => {
   const locations = ['Remoto', 'Híbrido', 'Polana', 'Bairro Central', 'Sommerschield', 'Matola'];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-10">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="font-sans font-bold text-3xl text-gray-900 tracking-tight">
+        <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-[#173037] tracking-tight">
           Pesquisar Oportunidades de TI
         </h1>
         <p className="text-sm text-gray-500 mt-1">
@@ -181,7 +181,7 @@ export const OffersList: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Filters Sidebar */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm self-start h-auto">
+        <div className="conecta-surface p-6 self-start h-auto">
           <div className="flex justify-between items-center pb-4 border-b border-gray-100 mb-5">
             <span className="font-bold text-sm text-gray-800 flex items-center gap-1.5">
               <SlidersHorizontal size={16} className="text-primary" /> Filtros Ativos
@@ -280,7 +280,7 @@ export const OffersList: React.FC = () => {
                   </div>
                 ))
               ) : (
-                <div className="col-span-2 text-center py-16 bg-white border border-gray-100 rounded-2xl p-8">
+                <div className="col-span-2 text-center py-16 conecta-surface p-8">
                   <p className="text-sm font-medium text-gray-500">Nenhum projecto corresponde aos seus critérios.</p>
                   <button onClick={handleClearFilters} className="mt-3 text-xs text-primary bg-primary/10 px-3 py-1.5 rounded-lg font-bold">
                     Mostrar Todas as Vagas

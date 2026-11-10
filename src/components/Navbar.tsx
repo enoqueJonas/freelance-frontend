@@ -36,8 +36,8 @@ export const Navbar: React.FC = () => {
       ? "block px-4 py-2.5 text-base font-medium rounded-lg transition-colors "
       : "px-3 py-2 text-sm font-medium rounded-lg transition-colors ";
 
-    const activeStyle = "bg-primary/10 text-primary font-semibold";
-    const inactiveStyle = "text-gray-600 hover:bg-primary/5 hover:text-primary";
+    const activeStyle = "bg-[#E6F2ED] text-primary font-bold";
+    const inactiveStyle = "text-[#516B6D] hover:bg-[#EDF4F0] hover:text-primary";
 
     const linkStyle = (path: string) => `${baseClass} ${isActive(path) ? activeStyle : inactiveStyle}`;
 
@@ -75,10 +75,9 @@ export const Navbar: React.FC = () => {
 
         {/* Role-Specific Shortcuts */}
         {user?.role === 'employer' && (
-          <Link to="/offers/new" className={linkStyle('/offers/new')} onClick={() => setIsOpen(false)}>
-            <span className="flex items-center gap-1.5 text-secondary hover:text-secondary/90 bg-secondary/10 px-2.5 py-1 rounded-md">
-              <PlusCircle size={16} /> Publicar Vaga
-            </span>
+          <Link to="/dashboard?tab=offers" onClick={() => setIsOpen(false)}
+            className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-extrabold bg-[#E6F2ED] text-[#0B655B] hover:bg-[#D7EBDD] transition-colors">
+            <PlusCircle size={16} /> Gerir Vagas
           </Link>
         )}
       </>
@@ -88,20 +87,20 @@ export const Navbar: React.FC = () => {
   const userInitial = user ? user.first_name.charAt(0).toUpperCase() : '';
 
   return (
-    <nav className="bg-white border-b border-gray-100 sticky top-0 z-40 shadow-sm">
+    <nav className="bg-white/95 backdrop-blur-xl border-b border-[#DCE8E1] sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between h-[76px]">
           {/* Logo Brand */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-extrabold text-xl shadow-md tracking-wider">
+              <div className="w-11 h-11 rounded-2xl bg-[#123943] flex items-center justify-center text-[#D9F781] font-extrabold text-xl shadow-sm tracking-wider">
                 CT
               </div>
               <div className="flex flex-col">
-                <span className="font-sans font-bold text-lg text-gray-900 leading-none tracking-tight">
+                <span className="font-display font-extrabold text-xl text-[#15333B] leading-none tracking-tight">
                   ConecTA
                 </span>
-                <span className="font-sans text-[10px] text-primary/80 font-bold uppercase tracking-wider">
+                <span className="font-sans text-[10px] text-[#537B76] font-bold uppercase tracking-[.15em]">
                   Maputo Freelance
                 </span>
               </div>
@@ -203,7 +202,7 @@ export const Navbar: React.FC = () => {
                 <Link to="/login" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors">
                   Aceder
                 </Link>
-                <Link to="/register" className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg shadow-sm transition-colors">
+                <Link to="/register" className="px-5 py-2.5 text-sm font-bold text-[#123943] bg-[#D9F781] hover:bg-[#C9EE63] rounded-xl transition-colors">
                   Registar-se
                 </Link>
               </div>

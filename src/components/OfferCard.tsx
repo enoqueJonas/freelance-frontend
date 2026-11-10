@@ -22,15 +22,15 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onApply }) => {
   });
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 hover:border-primary/35 p-6 shadow-sm hover:shadow-md transition-all group flex flex-col justify-between h-full">
+    <div className="conecta-card p-6 group flex flex-col justify-between h-full">
       <div>
         {/* Header - Role & Employer */}
         <div className="flex justify-between items-start gap-3 mb-3">
           <div>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary mb-2">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#E5F1EB] text-[#0D685E] mb-3">
               {offer.category}
             </span>
-            <h3 className="font-sans font-bold text-lg text-gray-800 hover:text-primary transition-colors group-hover:translate-x-0.5 transform duration-150">
+            <h3 className="font-display font-extrabold text-lg text-[#173037] hover:text-secondary transition-colors group-hover:translate-x-0.5 transform duration-150">
               <Link to={`/offers/${offer.id}`}>
                 {offer.title}
               </Link>
@@ -43,7 +43,7 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onApply }) => {
           <div className="w-6 h-6 rounded-md bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-600 uppercase border border-gray-150">
             {offer.employerProfile.companyName.charAt(0)}
           </div>
-          <span className="text-sm font-medium text-gray-600">
+          <span className="text-sm font-medium text-[#486569]">
             {offer.employerProfile.companyName}
           </span>
           <span className="text-xs text-gray-400">•</span>
@@ -53,7 +53,7 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onApply }) => {
         </div>
 
         {/* Main description preview */}
-        <p className="text-sm text-gray-500 line-clamp-3 mb-4 leading-relaxed">
+        <p className="text-sm text-[#607578] line-clamp-3 mb-4 leading-relaxed">
           {offer.description}
         </p>
 
@@ -62,7 +62,7 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onApply }) => {
           {offer.requiredSkills.map((skill, index) => (
             <span 
               key={index} 
-              className="px-2 py-0.5 text-xs text-gray-600 bg-gray-100 rounded-md border border-gray-150"
+              className="px-2 py-0.5 text-xs text-[#436364] bg-[#F0F5F2] rounded-md border border-[#E1EAE5]"
             >
               {skill}
             </span>
@@ -74,7 +74,7 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onApply }) => {
       <div className="pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 text-xs text-gray-500 font-medium">
         <div className="flex flex-wrap gap-3">
           <span className="flex items-center gap-1.5 text-gray-600 font-semibold text-sm">
-            <CircleDollarSign size={16} className="text-emerald-500" />
+            <CircleDollarSign size={16} className="text-secondary" />
             {formattedSalary}
           </span>
           <span className="flex items-center gap-1">
@@ -90,7 +90,7 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onApply }) => {
         <div>
           <Link 
             to={`/offers/${offer.id}`}
-            className="inline-flex items-center gap-1 px-4 py-2 text-xs font-semibold text-primary bg-primary/10 group-hover:bg-primary group-hover:text-white rounded-lg transition-all"
+            className="inline-flex items-center gap-1 px-4 py-2 text-xs font-semibold text-primary bg-[#E7F2ED] group-hover:bg-primary group-hover:text-white rounded-xl transition-all"
           >
             Ver Detalhes
           </Link>

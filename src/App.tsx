@@ -28,9 +28,9 @@ function AppContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F3F7FA] flex items-center justify-center">
+      <div className="min-h-screen bg-canvas flex items-center justify-center">
         <div className="text-center font-sans">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-extrabold text-xl shadow-md mx-auto mb-4 animate-bounce">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-[#D9F781] font-extrabold text-xl shadow-md mx-auto mb-4 animate-bounce">
             CT
           </div>
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
@@ -42,7 +42,7 @@ function AppContent() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen font-sans antialiased bg-[#F3F7FA] text-gray-800">
+    <div className="flex flex-col min-h-screen font-sans antialiased bg-canvas text-[#173037]">
       <Navbar />
       <main className="flex-grow">
         <Routes>

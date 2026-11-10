@@ -1,8 +1,80 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
+/* ConecTA: professional, human-centered technology marketplace.
+   Use semantic tokens so all screens retain a coherent identity. */
 @theme {
-  --font-sans: "Poppins", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --color-primary: #1F76D1;
-  --color-secondary: #1BBF8A;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Manrope", "DM Sans", ui-sans-serif, sans-serif;
+  --color-primary: #123943;
+  --color-secondary: #087F70;
+  --color-accent: #D9F781;
+  --color-ink: #173037;
+  --color-canvas: #F5F7F4;
+}
+
+:root {
+  font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  color: #173037;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  background: #F5F7F4;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Manrope", "DM Sans", ui-sans-serif, sans-serif;
+  letter-spacing: -0.025em;
+}
+::selection {
+  background: #D9F781;
+  color: #123943;
+}
+:where(button, a, input, textarea, select):focus-visible {
+  outline: 3px solid #5CBBAF;
+  outline-offset: 3px;
+}
+.conecta-card {
+  background: #fff;
+  border: 1px solid #E2E9E6;
+  border-radius: 1.25rem;
+  box-shadow: 0 6px 26px rgba(20, 57, 63, .035);
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.conecta-card:hover {
+  border-color: #B6D1C9;
+  box-shadow: 0 16px 40px rgba(19, 57, 67, .09);
+  transform: translateY(-2px);
+}
+.conecta-surface {
+  background: #fff;
+  border: 1px solid #E2E9E6;
+  border-radius: 1.25rem;
+  box-shadow: 0 5px 25px rgba(20, 57, 63, .025);
+}
+.conecta-stat {
+  background: #fff;
+  border: 1px solid #E2E9E6;
+  border-radius: 1.1rem;
+  box-shadow: 0 6px 24px rgba(20, 57, 63, .035);
+}
+.conecta-muted { color: #5D7376; }
+.conecta-eyebrow {
+  color: #087F70;
+  text-transform: uppercase;
+  letter-spacing: .13em;
+  font-size: .75rem;
+  font-weight: 800;
+}
+.conecta-hero-pattern {
+  background-image:
+    radial-gradient(circle at 78% 22%, rgba(217,247,129,.17), transparent 22rem),
+    radial-gradient(circle at 0% 95%, rgba(36,154,143,.22), transparent 30rem);
+}
+@media (prefers-reduced-motion: reduce) {
+  .conecta-card { transition: none; }
+  .conecta-card:hover { transform: none; }
 }

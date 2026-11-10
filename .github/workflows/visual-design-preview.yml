@@ -1,0 +1,52 @@
+name: ConecTA — Visual V1 Preview
+
+on:
+  push:
+    branches:
+      - design/conecta-petrol-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install supported Chromium tooling
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Typecheck and build
+        run: |
+          npm run lint
+          npm run build
+      - name: Capture real screens
+        run: |
+          npm run dev -- --host 127.0.0.1 > /tmp/conecta-vite.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          READY=0
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3000/ >/dev/null 2>&1; then READY=1; break; fi
+            sleep 1
+          done
+          if [ "$READY" -ne 1 ]; then cat /tmp/conecta-vite.log; exit 1; fi
+          node scripts/capture-monografia.mjs
+          test "$(find capturas-monografia -name '*.png' | wc -l | tr -d ' ')" -eq 15
+      - name: Upload before/after design preview
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ConecTA-Visual-V1-Petrol
+          path: capturas-monografia/
+          retention-days: 30
+          if-no-files-found: warn

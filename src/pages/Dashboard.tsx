@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ProfileRolesPanel } from '../components/ProfileRolesPanel';
 import { mockApi } from '../services/mockApi';
@@ -25,6 +25,8 @@ import {
 export const Dashboard: React.FC = () => {
   const { user, profile, refreshUserData, uploadDocument } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
 
   // Master Lists
   const [userOffers, setUserOffers] = useState<Offer[]>([]);
@@ -75,6 +77,13 @@ export const Dashboard: React.FC = () => {
     setUserProposals([]);
     setUserContracts([]);
   }, [user?.role]);
+
+  // Um atalho de navegação deve abrir efectivamente o separador de vagas.
+  useEffect(() => {
+    if (user?.role === 'employer' && requestedTab === 'offers') {
+      setActiveTab('offers');
+    }
+  }, [requestedTab, user?.role]);
 
   const loadData = async () => {
     if (!user) return;
@@ -229,20 +238,20 @@ export const Dashboard: React.FC = () => {
       const activeContractsCount = userContracts.filter(c => c.status === 'active').length;
       return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Candidaturas Ativas</p>
-            <p className="text-2xl font-bold text-gray-800 mt-1">{userProposals.length}</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Candidaturas Ativas</p>
+            <p className="text-3xl font-extrabold text-[#173037] mt-2">{userProposals.length}</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Contratos Ativos</p>
-            <p className="text-2xl font-bold text-blue-600 mt-1">{activeContractsCount}</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Contratos Ativos</p>
+            <p className="text-3xl font-extrabold text-primary mt-2">{activeContractsCount}</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Serviços Entregues</p>
-            <p className="text-2xl font-bold text-emerald-600 mt-1">{profile && 'completedJobs' in profile ? profile.completedJobs : 0}</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Serviços Entregues</p>
+            <p className="text-3xl font-extrabold text-secondary mt-2">{profile && 'completedJobs' in profile ? profile.completedJobs : 0}</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Rating Médio</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Rating Médio</p>
             <p className="text-2xl font-bold text-amber-500 mt-1 flex items-center gap-1">
               <LucideStar className="fill-current text-amber-400 shrink-0" size={18} />
               {profile && 'averageRating' in profile ? profile.averageRating : '5.0'}
@@ -255,20 +264,20 @@ export const Dashboard: React.FC = () => {
       const pendingBids = userProposals.filter(p => p.status === 'pending').length;
       return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Projetos Ativos</p>
-            <p className="text-2xl font-bold text-blue-600 mt-1">{activeOffersCount}</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Projetos Ativos</p>
+            <p className="text-3xl font-extrabold text-primary mt-2">{activeOffersCount}</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Propostas Pendentes</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Propostas Pendentes</p>
             <p className="text-2xl font-bold text-orange-655 text-orange-500 mt-1">{pendingBids}</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Contratos Ativos</p>
-            <p className="text-2xl font-bold text-emerald-600 mt-1">{userContracts.filter(c => c.status === 'active').length}</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Contratos Ativos</p>
+            <p className="text-3xl font-extrabold text-secondary mt-2">{userContracts.filter(c => c.status === 'active').length}</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Valor de contratos activos</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Valor de contratos activos</p>
             <p className="text-2xl font-bold text-gray-700 font-mono mt-1">
               {userContracts.filter(c => c.status === 'active').reduce((acc, current) => acc + current.budget, 0).toLocaleString()} MT
             </p>
@@ -279,20 +288,20 @@ export const Dashboard: React.FC = () => {
       // Admin stats
       return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Utilizadores Totais</p>
-            <p className="text-2xl font-bold text-blue-600 mt-1">{allUsers.length}</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Utilizadores Totais</p>
+            <p className="text-3xl font-extrabold text-primary mt-2">{allUsers.length}</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Dossiês em Revisão</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Dossiês em Revisão</p>
             <p className="text-2xl font-bold text-orange-500 mt-1 bg-orange-50 px-2 py-0.5 rounded inline-block">{pendingVerifications.length}</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Conflitos em acompanhamento</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Conflitos em acompanhamento</p>
             <p className="text-2xl font-bold text-red-600 mt-1 bg-red-50 px-2 py-0.5 rounded inline-block">{openDisputeCount}</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Total Contratado</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Total Contratado</p>
             <p className="text-2xl font-bold text-gray-800 font-mono mt-1">{userContracts.reduce((acc, c) => acc + c.budget, 0).toLocaleString()} MT</p>
           </div>
         </div>
@@ -301,14 +310,14 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
+    <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-10 min-h-screen">
       {/* Header and Sync indicator */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 pb-5 mb-8">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-6 mb-7">
         <div>
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">
             ✓ Logado como {user.first_name} ({user.role === 'worker' ? 'Prestador' : user.role === 'employer' ? 'Contratante' : 'Admin'})
           </span>
-          <h1 className="font-sans font-bold text-3xl text-gray-900 tracking-tight mt-1">
+          <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-[#173037] tracking-tight mt-2">
             Painel Geral de Gestão
           </h1>
         </div>
@@ -325,7 +334,7 @@ export const Dashboard: React.FC = () => {
       {renderStatsRow()}
 
       {/* Tabs list based on user roles */}
-      <div className="flex border-b border-gray-100 mb-8 overflow-x-auto gap-4 scrollbar-none font-medium">
+      <div className="flex border-b border-[#D8E4DD] mb-8 overflow-x-auto gap-6 scrollbar-none font-medium">
         <button
           onClick={() => setActiveTab('overview')}
           className={`pb-4 px-1 text-sm border-b-2 font-bold cursor-pointer transition-all whitespace-nowrap ${
@@ -512,7 +521,7 @@ export const Dashboard: React.FC = () => {
             </div>
 
             <div className="bg-gradient-to-tr from-blue-50 to-indigo-50/50 rounded-2xl border border-blue-50 p-6 space-y-4">
-              <h4 className="font-bold text-gray-800 text-sm flex items-center gap-1.5"><Shield size={16} className="text-blue-600" /> Suporte e Árbitros</h4>
+              <h4 className="font-bold text-gray-800 text-sm flex items-center gap-1.5"><Shield size={16} className="text-blue-600" /> Acompanhamento de conflitos</h4>
               <p className="text-xs text-gray-550 leading-relaxed">
                 Pode reportar um conflito e conservar informação para acompanhamento administrativo. O protótipo não arbitra contratos nem processa pagamentos.
               </p>
@@ -527,7 +536,7 @@ export const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Post Offer Form */}
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm h-auto">
+          <div className="conecta-surface p-6 h-auto">
             <h2 className="font-bold text-lg text-gray-850 mb-4 flex items-center gap-1.5">
               <PlusCircle size={18} className="text-blue-600" /> Publicar Novo Projeto
             </h2>
@@ -641,7 +650,7 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Active Published list */}
-          <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <div className="lg:col-span-2 conecta-surface p-6">
             <h2 className="font-bold text-lg text-gray-850 mb-4">Meus Projectos Publicados</h2>
             {userOffers.length > 0 ? (
               <div className="space-y-4">
@@ -670,7 +679,7 @@ export const Dashboard: React.FC = () => {
 
       {/* --------------------- TAB CONTENT: PROPOSALS --------------------- */}
       {activeTab === 'proposals' && (
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm max-w-4xl">
+        <div className="conecta-surface p-6 max-w-4xl">
           <h2 className="font-bold text-lg text-gray-850 mb-2">
             {user.role === 'employer' ? 'Propostas Recebidas de Freelancers' : 'Candidaturas Enviadas'}
           </h2>
@@ -767,7 +776,7 @@ export const Dashboard: React.FC = () => {
       {/* --------------------- TAB CONTENT: CONTRACTS --------------------- */}
       {activeTab === 'contracts' && (
         <div className="max-w-4xl space-y-6">
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <div className="conecta-surface p-6">
             <h2 className="font-bold text-lg text-gray-850 mb-2">
               Meus contratos e pagamentos externos
             </h2>
@@ -879,7 +888,7 @@ export const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* List pending verifications */}
-          <div className="col-span-2 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <div className="col-span-2 conecta-surface p-6">
             <h2 className="font-bold text-lg text-rose-850 flex items-center gap-1.5 mb-2"><Shield size={18} /> Verificação Editorial de BI / Registos</h2>
             <p className="text-xs text-gray-500 mb-6">Analise as identidades e aprova ou recusa conformidades regulamentares no mercado moçambicano.</p>
 
