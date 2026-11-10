@@ -11,6 +11,7 @@ const KEY = 'conecta_agreement_versions_v1';
 const CONTRACTS = 'serviplus_contracts';
 const USERS = 'serviplus_users';
 const NOTIFICATIONS = 'serviplus_notifications';
+const PAYMENTS = 'serviplus_payments';
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 const read = <T,>(key: string): T[] => {
   const value = localStorage.getItem(key);
@@ -86,7 +87,8 @@ const assertTerms = (terms: AgreementTerms): AgreementTerms => {
   const seen = new Set<string>();
   let sum = 0;
   for (const condition of terms.paymentConditions) {
-    if (!condition.id || seen.has(condition.id) ||
+    if (typeof condition.id !== 'string' || condition.id.length > 64 ||
+      !condition.id || seen.has(condition.id) ||
       !['ADVANCE', 'MILESTONE', 'FINAL'].includes(condition.stage) ||
       !['M-Pesa', 'e-Mola', 'Transferência Bancária', 'Outro'].includes(condition.method) ||
       !validMoney(condition.amount) ||
@@ -246,6 +248,13 @@ export const agreements = {
     const both = v.approvals.some(a => a.party === 'employer') &&
       v.approvals.some(a => a.party === 'worker');
     if (both) {
+      const recorded = read<{ contractId: number; amount: number; status: string }>(PAYMENTS)
+        .filter(p => p.contractId === contract.id &&
+          (p.status === 'REPORTED_PAID' || p.status === 'CONFIRMED'));
+      const reportedTotal = recorded.reduce((sum, p) => sum + cents(p.amount), 0);
+      if (reportedTotal > cents(v.terms.budget)) {
+        throw new Error('A nova versão não pode reduzir o valor abaixo dos pagamentos já declarados.');
+      }
       // Apenas neste ponto as novas condições podem produzir efeitos no protótipo.
       const list = versions();
       for (const old of list) {
@@ -274,16 +283,6 @@ export const agreements = {
       return clone(v);
     }
     saveVersion(v);
-    // Sinalizadores legados apenas para v1; não invalidar o contrato ativo numa alteração.
-    if (contract.status === 'pending') {
-      const c = contracts();
-      const index = c.findIndex(item => item.id === contract.id);
-      if (index >= 0) {
-        if (party === 'employer') c[index].signedByEmployer = true;
-        else c[index].signedByWorker = true;
-        write(CONTRACTS, c);
-      }
-    }
     return clone(v);
   },
 
@@ -307,8 +306,11 @@ export const agreements = {
     const contract = contractFor(contractId);
     partyFor(contract, actorUserId);
     const all = versions().filter(v => v.contractId === contractId);
+    const newest = all.reduce<AgreementVersion | null>(
+      (latest, item) => !latest || item.number > latest.number ? item : latest, null
+    );
     if (contract.status !== 'pending' || activeVersion(contractId) || existingOpen(contractId) ||
-      all.length === 0 || all.at(-1)?.status !== 'REJECTED') {
+      !newest || newest.status !== 'REJECTED') {
       throw new Error('Só acordos iniciais recusados podem ser renegociados nesta etapa.');
     }
     const last = all.reduce((a, b) => a.number > b.number ? a : b);
