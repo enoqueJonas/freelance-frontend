@@ -16,6 +16,7 @@ const storage: Storage = {
   setItem: (k, v) => { values.set(k, String(v)); }
 };
 Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: storage });
+const { mockApi } = await import('./mockApi');
 
 const employer: User = {
   id: 1, email: 'employer@example.test', username: 'employer',
@@ -278,4 +279,17 @@ test('RF18: orçamento renegociado não pode ficar abaixo dos valores declarados
   await assert.rejects(agreements.approve(draft.id, worker.id), /pagamentos já declarados/);
   assert.equal(contractNow().budget, 20000);
   assert.equal((await agreements.activeForContract(contract.id, employer.id))!.id, active.id);
+});
+
+
+test('RF13: contrato não pode ser concluído antes das aprovações nem por parte alheia', async () => {
+  const draftId = await publishInitial();
+  assert.equal(await mockApi.contracts.complete(contract.id, employer.id), false);
+  await agreements.approve(draftId, employer.id);
+  assert.equal(await mockApi.contracts.complete(contract.id, employer.id), false);
+  await agreements.approve(draftId, worker.id);
+  assert.equal(await mockApi.contracts.complete(contract.id, worker.id), false);
+  assert.equal(await mockApi.contracts.complete(contract.id, employer.id), true);
+  assert.equal(contractNow().status, 'completed');
+  assert.equal(await mockApi.contracts.complete(contract.id, employer.id), false);
 });
