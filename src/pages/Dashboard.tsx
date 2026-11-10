@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { ProfileRolesPanel } from '../components/ProfileRolesPanel';
 import { mockApi } from '../services/mockApi';
 import { 
-  Offer, Proposal, Contract, Payment, User as SystemUser, Notification 
+  Offer, Proposal, Contract, Payment, User as SystemUser, Notification, ProfileRole 
 } from '../types';
 import { 
   LayoutDashboard, PlusCircle, FileText, Send, UserCheck, 
@@ -237,10 +237,10 @@ export const Dashboard: React.FC = () => {
   // ---- REVIEW ACTIONS ----
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!reviewContract) return;
+    if (!reviewContract || !user || user.role === 'admin') return;
 
     try {
-      await mockApi.reviews.create(reviewContract.id, user!.id, reviewScore, reviewComment);
+      await mockApi.reviews.create(reviewContract.id, user.id, user.role, reviewScore, reviewComment);
       setReviewSuccess(true);
       setReviewComment('');
       loadData();
@@ -254,10 +254,10 @@ export const Dashboard: React.FC = () => {
   };
 
   // ---- ADMIN ACTIONS ----
-  const handleVerifyDocument = async (userId: number, approve: boolean) => {
+  const handleVerifyDocument = async (userId: number, role: ProfileRole, approve: boolean) => {
     setLoadingAction(true);
     try {
-      await mockApi.admin.approveDocument(userId, approve);
+      await mockApi.admin.approveDocument(userId, role, approve);
       await loadData();
     } catch (err) {
       console.error(err);
@@ -977,14 +977,14 @@ export const Dashboard: React.FC = () => {
 
                     <div className="flex justify-end gap-2">
                       <button
-                        onClick={() => handleVerifyDocument(item.userId, false)}
+                        onClick={() => handleVerifyDocument(item.userId, item.role as ProfileRole, false)}
                         className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg cursor-pointer"
                       >
                         Recusar BI
                       </button>
                       
                       <button
-                        onClick={() => handleVerifyDocument(item.userId, true)}
+                        onClick={() => handleVerifyDocument(item.userId, item.role as ProfileRole, true)}
                         className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg cursor-pointer"
                       >
                         Aprovar e Verificar Conta ✓
