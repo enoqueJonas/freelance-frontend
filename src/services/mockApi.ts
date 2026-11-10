@@ -745,11 +745,13 @@ export const mockApi = {
       }
     },
 
-    async complete(contractId: number): Promise<boolean> {
+    async complete(contractId: number, employerUserId: number): Promise<boolean> {
       await delay();
       const contracts = getList<Contract>(CONTRACTS_KEY);
       const idx = contracts.findIndex(c => c.id === contractId);
-      if (idx > -1) {
+      if (idx > -1 && contracts[idx].employerId === employerUserId &&
+        contracts[idx].status === 'active' &&
+        await agreements.activeForContract(contractId, employerUserId)) {
         contracts[idx].status = 'completed';
         setList(CONTRACTS_KEY, contracts);
 
