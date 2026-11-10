@@ -534,7 +534,7 @@ export const Dashboard: React.FC = () => {
 
             {user.is_verified === false ? (
               <div className="rounded-xl bg-amber-50 p-4 border border-amber-100 text-xs text-amber-800 font-semibold mb-4 leading-relaxed">
-                <AlertTriangle size={18} className="mr-1 inline align-middle shrink-0" /> Apenas empresas verificadas podem lançar novas vagas públicas no ServiPlus. Submeta os seus documentos primeiro.
+                <AlertTriangle size={18} className="mr-1 inline align-middle shrink-0" /> Apenas empresas verificadas podem lançar novas vagas públicas no ConecTA. Submeta os seus documentos primeiro.
               </div>
             ) : (
               <form onSubmit={handleOfferSubmit} className="space-y-4 text-xs font-semibold text-gray-600">
