@@ -6,9 +6,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { ProfileRolesPanel } from '../components/ProfileRolesPanel';
 import { mockApi } from '../services/mockApi';
 import { 
-  Offer, Proposal, Contract, Payment, User as SystemUser, Notification 
+  Offer, Proposal, Contract, Payment, User as SystemUser, Notification, ProfileRole 
 } from '../types';
 import { 
   LayoutDashboard, PlusCircle, FileText, Send, UserCheck, 
@@ -66,6 +67,14 @@ export const Dashboard: React.FC = () => {
     }
     loadData();
   }, [user]);
+
+  // Não manter uma aba exclusiva do papel anterior após mudar de contexto.
+  useEffect(() => {
+    setActiveTab('overview');
+    setUserOffers([]);
+    setUserProposals([]);
+    setUserContracts([]);
+  }, [user?.role]);
 
   const loadData = async () => {
     if (!user) return;
@@ -228,10 +237,10 @@ export const Dashboard: React.FC = () => {
   // ---- REVIEW ACTIONS ----
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!reviewContract) return;
+    if (!reviewContract || !user || user.role === 'admin') return;
 
     try {
-      await mockApi.reviews.create(reviewContract.id, user!.id, reviewScore, reviewComment);
+      await mockApi.reviews.create(reviewContract.id, user.id, user.role, reviewScore, reviewComment);
       setReviewSuccess(true);
       setReviewComment('');
       loadData();
@@ -245,10 +254,10 @@ export const Dashboard: React.FC = () => {
   };
 
   // ---- ADMIN ACTIONS ----
-  const handleVerifyDocument = async (userId: number, approve: boolean) => {
+  const handleVerifyDocument = async (userId: number, role: ProfileRole, approve: boolean) => {
     setLoadingAction(true);
     try {
-      await mockApi.admin.approveDocument(userId, approve);
+      await mockApi.admin.approveDocument(userId, role, approve);
       await loadData();
     } catch (err) {
       console.error(err);
@@ -369,6 +378,7 @@ export const Dashboard: React.FC = () => {
         </button>
       </div>
 
+      {user.role !== 'admin' && <ProfileRolesPanel />}
       {renderStatsRow()}
 
       {/* Tabs list based on user roles */}
@@ -762,7 +772,7 @@ export const Dashboard: React.FC = () => {
                         <div className="flex items-center gap-4 text-xxs font-semibold">
                           <span className="text-amber-500 font-bold flex items-center gap-0.5">★ {prop.workerProfile.averageRating}</span>
                           <span className="text-gray-400">{prop.workerProfile.completedJobs} Projectos</span>
-                          <Link to={`/profile/${prop.workerProfile.userId}`} className="text-blue-600 font-bold hover:underline">Ver Perfil</Link>
+                          <Link to={`/profile/${prop.workerProfile.userId}?role=worker`} className="text-blue-600 font-bold hover:underline">Ver Perfil</Link>
                         </div>
                       </div>
                     )}
@@ -951,7 +961,7 @@ export const Dashboard: React.FC = () => {
             {pendingVerifications.length > 0 ? (
               <div className="space-y-4">
                 {pendingVerifications.map((item) => (
-                  <div key={item.id} className="p-4 border border-gray-100 rounded-xl space-y-3.5 text-xs">
+                  <div key={`${item.role}-${item.userId}`} className="p-4 border border-gray-100 rounded-xl space-y-3.5 text-xs">
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-bold text-gray-800 text-sm">{item.name}</p>
@@ -967,14 +977,14 @@ export const Dashboard: React.FC = () => {
 
                     <div className="flex justify-end gap-2">
                       <button
-                        onClick={() => handleVerifyDocument(item.userId, false)}
+                        onClick={() => handleVerifyDocument(item.userId, item.role as ProfileRole, false)}
                         className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg cursor-pointer"
                       >
                         Recusar BI
                       </button>
                       
                       <button
-                        onClick={() => handleVerifyDocument(item.userId, true)}
+                        onClick={() => handleVerifyDocument(item.userId, item.role as ProfileRole, true)}
                         className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg cursor-pointer"
                       >
                         Aprovar e Verificar Conta ✓

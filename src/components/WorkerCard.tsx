@@ -24,7 +24,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({ worker }) => {
           <div className="flex-1">
             <div className="flex items-center gap-1.5 flex-wrap">
               <h3 className="font-sans font-bold text-base text-gray-800 hover:text-primary transition-colors">
-                <Link to={`/profile/${worker.userId}`}>
+                <Link to={`/profile/${worker.userId}?role=worker`}>
                   {worker.firstName} {worker.lastName}
                 </Link>
               </h3>
@@ -96,7 +96,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({ worker }) => {
             <MessageSquare size={14} />
           </Link>
           <Link 
-            to={`/profile/${worker.userId}`}
+            to={`/profile/${worker.userId}?role=worker`}
             className="px-3 py-1.5 font-semibold text-primary hover:bg-primary/10 rounded-lg transition-colors border border-primary/20"
           >
             Ver Perfil

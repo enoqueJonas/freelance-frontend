@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type UserRole = 'employer' | 'worker' | 'admin';
+export type ProfileRole = 'employer' | 'worker';
+export type UserRole = ProfileRole | 'admin';
 
 export interface User {
   id: number;
@@ -11,7 +12,8 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
-  role: UserRole;
+  role: UserRole; // Papel activo na interface, não a única capacidade da conta
+  roles?: ProfileRole[]; // Perfis realmente existentes; opcional para dados de demonstração legados
   is_verified: boolean;
   date_joined: string;
 }

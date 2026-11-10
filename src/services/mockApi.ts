@@ -15,7 +15,8 @@ import {
   Notification,
   Review,
   ProposalStatus,
-  UserRole
+  UserRole,
+  ProfileRole
 } from '../types';
 
 // Storage keys
@@ -240,22 +241,30 @@ const delay = (ms = 150) => new Promise(resolve => setTimeout(resolve, ms));
 export const mockApi = {
   // ---- AUTHENTICATION ----
   auth: {
-    async login(emailOrUsername: string): Promise<{ user: User; profile?: WorkerProfile | EmployerProfile } | null> {
+    async login(emailOrUsername: string, preferredRole?: ProfileRole): Promise<{ user: User; profile?: WorkerProfile | EmployerProfile } | null> {
       await delay();
       const users = getList<User>(USERS_KEY);
-      const user = users.find(u => u.email === emailOrUsername || u.username === emailOrUsername);
-      if (!user) return null;
+      const account = users.find(u => u.email === emailOrUsername || u.username === emailOrUsername);
+      if (!account) return null;
 
-      let profile;
-      if (user.role === 'worker') {
-        const workers = getList<WorkerProfile>(WORKERS_KEY);
-        profile = workers.find(w => w.userId === user.id);
-      } else if (user.role === 'employer') {
-        const employers = getList<EmployerProfile>(EMPLOYERS_KEY);
-        profile = employers.find(e => e.userId === user.id);
-      }
+      if (account.role === 'admin') return { user: { ...account, roles: [] } };
 
-      return { user, profile };
+      // Papéis efectivos derivam dos perfis criados, não de uma opção de sessão manipulável.
+      const roles: ProfileRole[] = [];
+      const worker = getList<WorkerProfile>(WORKERS_KEY).find(w => w.userId === account.id);
+      const employer = getList<EmployerProfile>(EMPLOYERS_KEY).find(e => e.userId === account.id);
+      if (worker) roles.push('worker');
+      if (employer) roles.push('employer');
+
+      const role = preferredRole && roles.includes(preferredRole)
+        ? preferredRole
+        : roles.includes(account.role as ProfileRole) ? account.role as ProfileRole : roles[0];
+      if (!role) return null;
+      const profile = role === 'worker' ? worker : employer;
+      return {
+        user: { ...account, role, roles, is_verified: profile?.documentStatus === 'approved' },
+        profile
+      };
     },
 
     async register(payload: {
@@ -273,6 +282,10 @@ export const mockApi = {
     }): Promise<{ user: User; profile: WorkerProfile | EmployerProfile }> {
       await delay();
       const users = getList<User>(USERS_KEY);
+      if (users.some(u => u.email.toLowerCase() === payload.email.trim().toLowerCase() ||
+        u.username.toLowerCase() === payload.username.trim().toLowerCase())) {
+        throw new Error('Email ou nome de utilizador já registado.');
+      }
       const isVerifiedDefault = false; // Registration keeps users unverified until documents are approved
 
       const newUser: User = {
@@ -282,6 +295,7 @@ export const mockApi = {
         first_name: payload.firstName,
         last_name: payload.lastName,
         role: payload.role,
+        roles: [payload.role],
         is_verified: isVerifiedDefault,
         date_joined: new Date().toISOString().split('T')[0]
       };
@@ -344,43 +358,86 @@ export const mockApi = {
       return { user: newUser, profile };
     },
 
-    async uploadVerificationDocument(userId: number, documentUrl: string): Promise<boolean> {
+    async uploadVerificationDocument(userId: number, role: ProfileRole, documentUrl: string): Promise<boolean> {
+      await delay();
+      const users = getList<User>(USERS_KEY);
+      if (!users.some(u => u.id === userId && u.role !== 'admin')) return false;
+      let updated = false;
+      if (role === 'worker') {
+        const workers = getList<WorkerProfile>(WORKERS_KEY);
+        const idx = workers.findIndex(w => w.userId === userId);
+        if (idx >= 0) {
+          workers[idx].documentStatus = 'pending';
+          workers[idx].documentUrl = documentUrl;
+          setList(WORKERS_KEY, workers);
+          updated = true;
+        }
+      } else {
+        const employers = getList<EmployerProfile>(EMPLOYERS_KEY);
+        const idx = employers.findIndex(e => e.userId === userId);
+        if (idx >= 0) {
+          employers[idx].documentStatus = 'pending';
+          employers[idx].documentUrl = documentUrl;
+          setList(EMPLOYERS_KEY, employers);
+          updated = true;
+        }
+      }
+      if (!updated) return false;
+      const notifications = getList<Notification>(NOTIFICATIONS_KEY);
+      notifications.unshift({
+        id: notifications.length + 1, userId,
+        text: 'Documentação do perfil enviada para análise.',
+        isRead: false, createdAt: new Date().toISOString(), type: 'verification'
+      });
+      setList(NOTIFICATIONS_KEY, notifications);
+      return true;
+    },
+
+    // V01 / RN01: criar o segundo perfil na conta existente, sem criar outra conta.
+    async createAdditionalProfile(userId: number, role: ProfileRole, payload: {
+      location?: string;
+      bio?: string;
+      title?: string;
+      skills?: string[];
+      companyName?: string;
+      industry?: string;
+    }): Promise<WorkerProfile | EmployerProfile> {
       await delay();
       const users = getList<User>(USERS_KEY);
       const user = users.find(u => u.id === userId);
-      if (!user) return false;
+      if (!user || user.role === 'admin') throw new Error('Conta não elegível.');
+      const roles: ProfileRole[] = [];
+      if (getList<WorkerProfile>(WORKERS_KEY).some(w => w.userId === userId)) roles.push('worker');
+      if (getList<EmployerProfile>(EMPLOYERS_KEY).some(e => e.userId === userId)) roles.push('employer');
+      if (roles.includes(role)) throw new Error('Este perfil já existe nesta conta.');
 
-      if (user.role === 'worker') {
+      let profile: WorkerProfile | EmployerProfile;
+      if (role === 'worker') {
+        if (!payload.title?.trim()) throw new Error('Indique a especialidade profissional.');
         const workers = getList<WorkerProfile>(WORKERS_KEY);
-        const wIdx = workers.findIndex(w => w.userId === userId);
-        if (wIdx > -1) {
-          workers[wIdx].documentStatus = 'pending';
-          workers[wIdx].documentUrl = documentUrl;
-          setList(WORKERS_KEY, workers);
-        }
-      } else if (user.role === 'employer') {
+        profile = {
+          id: Math.max(0, ...workers.map(w => w.id)) + 1,
+          userId, firstName: user.first_name, lastName: user.last_name, email: user.email,
+          title: payload.title.trim(), bio: payload.bio?.trim() || '',
+          skills: payload.skills || [], experienceYears: 0, completedJobs: 0,
+          averageRating: 0, documentStatus: 'unsubmitted', location: payload.location?.trim() || ''
+        };
+        setList(WORKERS_KEY, [...workers, profile]);
+      } else {
         const employers = getList<EmployerProfile>(EMPLOYERS_KEY);
-        const eIdx = employers.findIndex(e => e.userId === userId);
-        if (eIdx > -1) {
-          employers[eIdx].documentStatus = 'pending';
-          employers[eIdx].documentUrl = documentUrl;
-          setList(EMPLOYERS_KEY, employers);
-        }
+        profile = {
+          id: Math.max(0, ...employers.map(e => e.id)) + 1,
+          userId, companyName: payload.companyName?.trim() || [user.first_name, user.last_name].join(' '),
+          contactName: [user.first_name, user.last_name].join(' '),
+          email: user.email, description: payload.bio?.trim() || '',
+          location: payload.location?.trim() || '', industry: payload.industry?.trim() || '',
+          documentStatus: 'unsubmitted'
+        };
+        setList(EMPLOYERS_KEY, [...employers, profile]);
       }
-
-      // Notify user
-      const notifications = getList<Notification>(NOTIFICATIONS_KEY);
-      notifications.unshift({
-        id: notifications.length + 1,
-        userId: userId,
-        text: 'Documentos carregados com sucesso! A nossa equipa irá analisá-los dentro de 24 horas.',
-        isRead: false,
-        createdAt: new Date().toISOString(),
-        type: 'verification'
-      });
-      setList(NOTIFICATIONS_KEY, notifications);
-
-      return true;
+      user.roles = [...roles, role];
+      setList(USERS_KEY, users);
+      return profile;
     },
 
     async updateProfile(userId: number, role: 'worker' | 'employer', payload: any): Promise<any> {
@@ -511,11 +568,16 @@ export const mockApi = {
 
       const offers = getList<Offer>(OFFERS_KEY);
       const offer = offers.find(o => o.id === offerId);
-      if (!offer) {
-        throw new Error('Vaga de emprego não encontrada');
+      if (!offer) throw new Error('Oportunidade não encontrada.');
+      if (offer.status !== 'active') throw new Error('Oportunidade indisponível para propostas.');
+      if (offer.employerProfile.userId === workerUserId) {
+        throw new Error('RN02: não pode propor à sua própria oportunidade.');
       }
 
       const proposals = getList<Proposal>(PROPOSALS_KEY);
+      if (proposals.some(p => p.offerId === offerId && p.workerProfile.userId === workerUserId && p.status !== 'cancelled')) {
+        throw new Error('Já submeteu uma proposta a esta oportunidade.');
+      }
       const newProposal: Proposal = {
         id: proposals.length + 1,
         offerId: offer.id,
@@ -611,6 +673,13 @@ export const mockApi = {
       const offers = getList<Offer>(OFFERS_KEY);
       const offer = offers.find(o => o.id === proposal.offerId);
       if (!offer) throw new Error('Vaga de emprego associada não encontrada');
+      if (offer.employerProfile.userId !== employerUserId) {
+        throw new Error('Apenas o empregador desta oportunidade pode aceitar a proposta.');
+      }
+      if (proposal.workerProfile.userId === employerUserId) {
+        throw new Error('RN02: autocontratação não permitida.');
+      }
+      if (proposal.status !== 'pending') throw new Error('Esta proposta já foi processada.');
 
       const employers = getList<EmployerProfile>(EMPLOYERS_KEY);
       const employerProfile = employers.find(e => e.userId === employerUserId);
@@ -662,7 +731,9 @@ export const mockApi = {
       await delay();
       const contracts = getList<Contract>(CONTRACTS_KEY);
       const idx = contracts.findIndex(c => c.id === contractId);
-      if (idx > -1) {
+      if (idx > -1 && contracts[idx].workerProfile.userId === workerUserId &&
+          contracts[idx].employerId !== workerUserId && contracts[idx].status === 'pending' &&
+          !contracts[idx].signedByWorker) {
         contracts[idx].signedByWorker = true;
         contracts[idx].status = 'active'; // Once both sign, it goes Active
         setList(CONTRACTS_KEY, contracts);
@@ -930,7 +1001,7 @@ export const mockApi = {
       return reviews.filter(r => r.targetId === targetUserId);
     },
 
-    async create(contractId: number, authorUserId: number, rating: number, comment: string): Promise<Review | null> {
+    async create(contractId: number, authorUserId: number, authorRole: ProfileRole, rating: number, comment: string): Promise<Review | null> {
       await delay();
       const contracts = getList<Contract>(CONTRACTS_KEY);
       const contract = contracts.find(c => c.id === contractId);
@@ -938,17 +1009,19 @@ export const mockApi = {
 
       const users = getList<User>(USERS_KEY);
       const author = users.find(u => u.id === authorUserId);
-      if (!author) return null;
-
-      // Target of review depends on author role
-      const targetId = author.role === 'employer' ? contract.workerProfile.userId : contract.employerId;
+      if (!author || contract.status !== 'completed' || rating < 1 || rating > 5) return null;
+      const isEmployer = authorRole === 'employer' && contract.employerId === authorUserId;
+      const isWorker = authorRole === 'worker' && contract.workerProfile.userId === authorUserId;
+      if (!isEmployer && !isWorker) return null;
+      const targetId = isEmployer ? contract.workerProfile.userId : contract.employerId;
 
       const reviews = getList<Review>(REVIEWS_KEY);
+      if (reviews.some(r => r.contractId === contractId && r.authorId === authorUserId)) return null;
       const newReview: Review = {
         id: reviews.length + 1,
         contractId,
         authorId: authorUserId,
-        authorName: author.role === 'employer' ? contract.employerProfile.companyName : `${author.first_name} ${author.last_name}`,
+        authorName: isEmployer ? contract.employerProfile.companyName : `${author.first_name} ${author.last_name}`,
         targetId,
         score: rating,
         comment,
@@ -960,7 +1033,7 @@ export const mockApi = {
 
       // Recalculate average rating of target if worker
       const targetUser = users.find(u => u.id === targetId);
-      if (targetUser && targetUser.role === 'worker') {
+      if (isEmployer) {
         const workers = getList<WorkerProfile>(WORKERS_KEY);
         const wIdx = workers.findIndex(w => w.userId === targetId);
         if (wIdx > -1) {
@@ -1031,53 +1104,35 @@ export const mockApi = {
       return items;
     },
 
-    async approveDocument(userId: number, approve: boolean): Promise<boolean> {
+    async approveDocument(userId: number, role: ProfileRole, approve: boolean): Promise<boolean> {
       await delay();
-      const users = getList<User>(USERS_KEY);
-      const uIdx = users.findIndex(u => u.id === userId);
-      if (uIdx === -1) return false;
-
       const targetStatus = approve ? 'approved' : 'rejected';
-
-      if (users[uIdx].role === 'worker') {
+      let updated = false;
+      if (role === 'worker') {
         const workers = getList<WorkerProfile>(WORKERS_KEY);
-        const wIdx = workers.findIndex(w => w.userId === userId);
-        if (wIdx > -1) {
-          workers[wIdx].documentStatus = targetStatus;
+        const idx = workers.findIndex(w => w.userId === userId && w.documentStatus === 'pending');
+        if (idx >= 0) {
+          workers[idx].documentStatus = targetStatus;
           setList(WORKERS_KEY, workers);
+          updated = true;
         }
-      } else if (users[uIdx].role === 'employer') {
-        const employers = getList<EmployerProfile>(EMPLOYERS_KEY);
-        const eIdx = employers.findIndex(e => e.userId === userId);
-        if (eIdx > -1) {
-          employers[eIdx].documentStatus = targetStatus;
-          setList(EMPLOYERS_KEY, employers);
-        }
-      }
-
-      if (approve) {
-        users[uIdx].is_verified = true;
       } else {
-        users[uIdx].is_verified = false;
+        const employers = getList<EmployerProfile>(EMPLOYERS_KEY);
+        const idx = employers.findIndex(e => e.userId === userId && e.documentStatus === 'pending');
+        if (idx >= 0) {
+          employers[idx].documentStatus = targetStatus;
+          setList(EMPLOYERS_KEY, employers);
+          updated = true;
+        }
       }
-      setList(USERS_KEY, users);
-
-      // Send User confirmation notification
+      if (!updated) return false;
       const notifications = getList<Notification>(NOTIFICATIONS_KEY);
-      const statusText = approve
-        ? 'A sua conta foi VERIFICADA e autenticada com sucesso! Agora tem acesso completo à publicação de vagas ou envio de propostas.'
-        : 'Os seus documentos de identificação foram recusados por falta de legitimidade ou ficheiro corrompido. Submeta novamente na secção do perfil.';
-      
       notifications.unshift({
-        id: notifications.length + 1,
-        userId: userId,
-        text: statusText,
-        isRead: false,
-        createdAt: new Date().toISOString(),
-        type: 'verification'
+        id: notifications.length + 1, userId,
+        text: approve ? 'O seu perfil foi aprovado.' : 'A documentação do seu perfil foi recusada.',
+        isRead: false, createdAt: new Date().toISOString(), type: 'verification'
       });
       setList(NOTIFICATIONS_KEY, notifications);
-
       return true;
     },
 

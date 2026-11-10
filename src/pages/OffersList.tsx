@@ -129,7 +129,12 @@ export const OffersList: React.FC = () => {
 
   const handleProposalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || user.role !== 'worker' || !profile) return;
+    if (!user || user.role !== 'worker' || !profile || !selectedOffer) return;
+    if (selectedOffer.employerProfile.userId === user.id) {
+      setProposalErrorMsg('RN02: não pode submeter uma proposta à sua própria oportunidade.');
+      setProposalStatus('error');
+      return;
+    }
     if (profile.documentStatus !== 'approved') {
       setProposalErrorMsg('Apenas freelancers formalmente VERIFICADOS com BI/NUIT podem enviar propostas.');
       setProposalStatus('error');
@@ -397,6 +402,10 @@ export const OffersList: React.FC = () => {
                 <div className="rounded-xl bg-amber-50 border border-amber-105 p-3.5 text-xs text-amber-800 flex items-center gap-2 font-medium leading-relaxed">
                   <AlertTriangle size={20} className="text-amber-550 shrink-0" />
                   <span>Apenas contas registadas no papel de **Freelancer / Prestador** podem submeter propostas comerciais para projectos.</span>
+                </div>
+              ) : selectedOffer.employerProfile.userId === user.id ? (
+                <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800">
+                  Esta oportunidade foi publicada pela sua própria conta. A RN02 impede a autocontratação, mesmo que possua ambos os perfis.
                 </div>
               ) : alreadyApplied ? (
                 <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-4 text-center flex flex-col items-center gap-2">
