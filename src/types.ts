@@ -104,6 +104,55 @@ export interface Contract {
   signedByEmployer: boolean;
 }
 
+export type AgreementStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'ACTIVE' | 'SUPERSEDED' | 'REJECTED';
+export type AgreementParty = 'employer' | 'worker';
+
+export interface AgreementPaymentCondition {
+  id: string; // identificador estável da etapa, inclusive para vários marcos
+  stage: 'ADVANCE' | 'MILESTONE' | 'FINAL';
+  amount: number; // MZN; duas casas decimais
+  method: 'M-Pesa' | 'e-Mola' | 'Transferência Bancária' | 'Outro';
+  moment: string; // momento/condição da prestação
+}
+
+export interface AgreementTerms {
+  title: string;
+  scope: string;
+  deliverables: string;
+  acceptanceCriteria: string;
+  budget: number;
+  startDate: string;
+  endDate: string;
+  paymentConditions: AgreementPaymentCondition[];
+}
+
+export interface AgreementApproval {
+  party: AgreementParty;
+  userId: number;
+  approvedAt: string;
+}
+export interface AgreementEvent {
+  action: 'CREATED' | 'DRAFT_UPDATED' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'ACTIVATED' | 'SUPERSEDED';
+  actorUserId: number;
+  at: string;
+  note: string;
+}
+export interface AgreementVersion {
+  id: number;
+  contractId: number;
+  number: number;
+  status: AgreementStatus;
+  createdByUserId: number;
+  createdAt: string;
+  submittedAt?: string;
+  reason: string;
+  terms: AgreementTerms; // não se altera depois de submetida
+  approvals: AgreementApproval[];
+  events: AgreementEvent[];
+  rejectedByUserId?: number;
+  rejectionReason?: string;
+}
+
 export type PaymentMethod = 'M-Pesa' | 'e-Mola' | 'Transferência Bancária' | 'Outro';
 export type PaymentStage = 'ADVANCE' | 'MILESTONE' | 'FINAL';
 export type PaymentStatus = 'REPORTED_PAID' | 'CONFIRMED' | 'CONTESTED';
@@ -119,6 +168,8 @@ export interface PaymentEvent {
 export interface Payment {
   id: number;
   contractId: number;
+  agreementVersionId?: number; // associação ao acordo aceite, se existir
+  agreementConditionId?: string;
   amount: number;
   method: PaymentMethod;
   stage: PaymentStage;

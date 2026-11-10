@@ -18,6 +18,7 @@ import {
   UserRole,
   ProfileRole
 } from '../types';
+import { agreements } from './agreements';
 
 // Storage keys
 const USERS_KEY = 'serviplus_users';
@@ -702,11 +703,12 @@ export const mockApi = {
         status: 'pending',
         createdAt: new Date().toISOString(),
         signedByWorker: false,
-        signedByEmployer: true // Created by employer, so they signed
+        signedByEmployer: false // A aceitação da proposta não substitui a aprovação explícita do acordo
       };
 
       contracts.unshift(newContract);
       setList(CONTRACTS_KEY, contracts);
+      await agreements.initializeDraft(newContract.id, employerUserId);
 
       // Update proposal status to accepted
       proposal.status = 'accepted';
@@ -727,39 +729,29 @@ export const mockApi = {
       return newContract;
     },
 
+    // Compatibilidade com o fluxo antigo: apenas aprovação expressa de uma versão publicada.
+    // A assinatura eletrónica demonstrativa só activa o contrato com a aceitação de AMBAS as partes.
     async sign(contractId: number, workerUserId: number): Promise<boolean> {
-      await delay();
-      const contracts = getList<Contract>(CONTRACTS_KEY);
-      const idx = contracts.findIndex(c => c.id === contractId);
-      if (idx > -1 && contracts[idx].workerProfile.userId === workerUserId &&
-          contracts[idx].employerId !== workerUserId && contracts[idx].status === 'pending' &&
-          !contracts[idx].signedByWorker) {
-        contracts[idx].signedByWorker = true;
-        contracts[idx].status = 'active'; // Once both sign, it goes Active
-        setList(CONTRACTS_KEY, contracts);
-
-        // Notify employer
-        const notifications = getList<Notification>(NOTIFICATIONS_KEY);
-        notifications.unshift({
-          id: notifications.length + 1,
-          userId: contracts[idx].employerId,
-          text: `O freelancer ${contracts[idx].workerProfile.firstName} assinou o contrato para "${contracts[idx].title}". O trabalho está oficialmente em andamento.`,
-          isRead: false,
-          createdAt: new Date().toISOString(),
-          type: 'contract'
-        });
-        setList(NOTIFICATIONS_KEY, notifications);
-
+      try {
+        const contract = getList<Contract>(CONTRACTS_KEY).find(c => c.id === contractId);
+        if (!contract || contract.workerProfile.userId !== workerUserId) return false;
+        const available = await agreements.listForContract(contractId, workerUserId);
+        const pending = available.find(v => v.status === 'PENDING_APPROVAL');
+        if (!pending) return false;
+        await agreements.approve(pending.id, workerUserId);
         return true;
+      } catch {
+        return false;
       }
-      return false;
     },
 
-    async complete(contractId: number): Promise<boolean> {
+    async complete(contractId: number, employerUserId: number): Promise<boolean> {
       await delay();
       const contracts = getList<Contract>(CONTRACTS_KEY);
       const idx = contracts.findIndex(c => c.id === contractId);
-      if (idx > -1) {
+      if (idx > -1 && contracts[idx].employerId === employerUserId &&
+        contracts[idx].status === 'active' &&
+        await agreements.activeForContract(contractId, employerUserId)) {
         contracts[idx].status = 'completed';
         setList(CONTRACTS_KEY, contracts);
 

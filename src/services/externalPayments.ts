@@ -1,6 +1,7 @@
 import {
   Contract, Notification, Payment, PaymentMethod, PaymentStage, PaymentStatus, User
 } from '../types';
+import { agreements } from './agreements';
 
 /**
  * Protótipo local RN09/RN10/RF19. Apenas regista declarações dos participantes.
@@ -45,6 +46,7 @@ export interface ExternalPaymentReport {
   paidOn: string;
   externalReference?: string;
   notes?: string;
+  agreementConditionId?: string;
 }
 
 export const externalPayments = {
@@ -85,7 +87,25 @@ export const externalPayments = {
       input.paidOn > new Date().toISOString().slice(0, 10)) {
       throw new Error('Indique valor positivo, método, etapa, momento e uma data válida.');
     }
+    const activeAgreement = await agreements.activeForContract(contractId, employerId);
+    const condition = activeAgreement?.terms.paymentConditions.find(
+      c => c.id === input.agreementConditionId
+    );
+    if (activeAgreement && (!condition || condition.method !== input.method ||
+        condition.stage !== input.stage || condition.moment !== input.moment)) {
+      throw new Error('O pagamento deve corresponder a uma condição da versão aceite do acordo.');
+    }
     const existing = records();
+    if (condition && activeAgreement) {
+      const usedCents = existing.filter(p => p.contractId === contractId &&
+        p.agreementVersionId === activeAgreement.id &&
+        p.agreementConditionId === condition.id &&
+        (p.status === 'REPORTED_PAID' || p.status === 'CONFIRMED'))
+        .reduce((sum, p) => sum + Math.round(p.amount * 100), 0);
+      if (usedCents + cents > Math.round(condition.amount * 100)) {
+        throw new Error('O valor declarado excede a etapa aceite do acordo.');
+      }
+    }
     const outstandingCents = existing
       .filter(p => p.contractId === contractId &&
         (p.status === 'REPORTED_PAID' || p.status === 'CONFIRMED'))
@@ -96,7 +116,10 @@ export const externalPayments = {
     const now = new Date().toISOString();
     const entry: Payment = {
       id: Math.max(0, ...existing.map(p => p.id)) + 1,
-      contractId, amount: cents / 100, method: input.method, stage: input.stage,
+      contractId,
+      agreementVersionId: activeAgreement?.id,
+      agreementConditionId: condition?.id,
+      amount: cents / 100, method: input.method, stage: input.stage,
       moment: input.moment.trim(), paidOn: input.paidOn,
       externalReference: input.externalReference?.trim() || undefined,
       notes: input.notes?.trim() || undefined,

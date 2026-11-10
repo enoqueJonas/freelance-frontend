@@ -16,6 +16,7 @@ Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: s
 const { mockApi } = await import('./mockApi');
 const { externalPayments } = await import('./externalPayments');
 const { disputeService } = await import('./disputes');
+const { agreements } = await import('./agreements');
 
 const admin: User = {
   id: 1, username: 'admin', email: 'admin@example.test',
@@ -63,6 +64,27 @@ const post = async (id: number) => mockApi.offers.create(id, {
   category: 'Desenvolvimento Web', requiredSkills: ['React'],
   salaryBudget: 20000, location: 'Maputo'
 });
+
+const acceptContract = async (contract: Contract, employerId: number, workerId: number) => {
+  const draft = (await agreements.listForContract(contract.id, employerId))
+    .find(version => version.status === 'DRAFT');
+  assert.ok(draft, 'a criação da contratação deve gerar a versão inicial');
+  const moment = 'Depois da aceitação bilateral das condições';
+  await agreements.saveDraft(draft.id, employerId, {
+    title: contract.title, scope: contract.description,
+    deliverables: 'Código-fonte, aplicação funcional e documentação técnica do serviço.',
+    acceptanceCriteria: 'A aplicação deve cumprir os casos de teste previamente acordados.',
+    budget: contract.budget, startDate: contract.startDate, endDate: contract.endDate,
+    paymentConditions: [{
+      id: 'advance', stage: 'ADVANCE', amount: contract.budget,
+      method: 'M-Pesa', moment
+    }]
+  });
+  await agreements.submitDraft(draft.id, employerId);
+  await agreements.approve(draft.id, employerId);
+  await agreements.approve(draft.id, workerId);
+  return { agreementVersionId: draft.id, moment };
+};
 
 test('V01: uma conta com perfil trabalhador cria empregador sem duplicar User', async () => {
   const first = await registerWorker();
@@ -157,7 +179,8 @@ test('RN02: terceiros não aceitam propostas nem assinam contrato alheio', async
   const contract = await mockApi.contracts.createFromProposal(owner.user.id, proposal.id);
   assert.equal(contract.status, 'pending');
   assert.equal(await mockApi.contracts.sign(contract.id, owner.user.id), false);
-  assert.equal(await mockApi.contracts.sign(contract.id, applicant.user.id), true);
+  const agreed = await acceptContract(contract, owner.user.id, applicant.user.id);
+  assert.ok(agreed.agreementVersionId > 0);
   assert.equal((await mockApi.contracts.getForUser(applicant.user.id, 'worker'))[0].status, 'active');
 });
 
@@ -171,11 +194,13 @@ test('Integração: contrato válido suporta pagamentos externos e reporte não 
     description: 'Implementação de portal', priceProposal: 18000, timelineDays: 15
   });
   const contract = await mockApi.contracts.createFromProposal(owner.user.id, proposal.id);
-  assert.equal(await mockApi.contracts.sign(contract.id, applicant.user.id), true);
+  const agreed = await acceptContract(contract, owner.user.id, applicant.user.id);
   const p = await externalPayments.report(contract.id, owner.user.id, {
     amount: 3000, method: 'M-Pesa', stage: 'ADVANCE',
-    moment: 'Após contrato', paidOn: new Date().toISOString().slice(0, 10)
+    agreementConditionId: 'advance',
+    moment: agreed.moment, paidOn: new Date().toISOString().slice(0, 10)
   });
+  assert.equal(p.agreementVersionId, agreed.agreementVersionId);
   assert.equal(p.status, 'REPORTED_PAID');
   assert.equal((await externalPayments.respond(p.id, applicant.user.id, 'CONFIRMED')).status, 'CONFIRMED');
   const d = await disputeService.report(contract.id, applicant.user.id, {
