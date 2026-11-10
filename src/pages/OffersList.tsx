@@ -168,10 +168,10 @@ export const OffersList: React.FC = () => {
   const locations = ['Remoto', 'Híbrido', 'Polana', 'Bairro Central', 'Sommerschield', 'Matola'];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-10">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="font-sans font-bold text-3xl text-gray-900 tracking-tight">
+        <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-[#173037] tracking-tight">
           Pesquisar Oportunidades de TI
         </h1>
         <p className="text-sm text-gray-500 mt-1">
