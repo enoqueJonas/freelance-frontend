@@ -301,14 +301,14 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
+    <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-10 min-h-screen">
       {/* Header and Sync indicator */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 pb-5 mb-8">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-6 mb-7">
         <div>
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">
             ✓ Logado como {user.first_name} ({user.role === 'worker' ? 'Prestador' : user.role === 'employer' ? 'Contratante' : 'Admin'})
           </span>
-          <h1 className="font-sans font-bold text-3xl text-gray-900 tracking-tight mt-1">
+          <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-[#173037] tracking-tight mt-2">
             Painel Geral de Gestão
           </h1>
         </div>
@@ -325,7 +325,7 @@ export const Dashboard: React.FC = () => {
       {renderStatsRow()}
 
       {/* Tabs list based on user roles */}
-      <div className="flex border-b border-gray-100 mb-8 overflow-x-auto gap-4 scrollbar-none font-medium">
+      <div className="flex border-b border-[#D8E4DD] mb-8 overflow-x-auto gap-6 scrollbar-none font-medium">
         <button
           onClick={() => setActiveTab('overview')}
           className={`pb-4 px-1 text-sm border-b-2 font-bold cursor-pointer transition-all whitespace-nowrap ${
