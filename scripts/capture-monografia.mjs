@@ -49,7 +49,7 @@ const snap = async (file, title, route, locator = null, waitText = null, note = 
   console.log('CAPTURA', file, title);
 };
 
-await goto('/', 'Ligue-se aos melhores');
+await goto('/', null);
 // The app initializes its own demonstration data. Extend those records with
 // SYNTHETIC contracts, agreements, payments and conflicts for reproducible screens.
 const fixture = await page.evaluate(() => {
@@ -217,7 +217,7 @@ const setSession = async (userId, role) => {
 };
 
 await snap('01-pagina-inicial.png', 'Página inicial da plataforma ConecTA', '/', null,
-  'Ligue-se aos melhores', 'Vista pública: pesquisa e apresentação da plataforma.');
+  null, 'Vista pública: pesquisa e apresentação da plataforma.');
 await snap('02-registo-trabalhador.png', 'Formulário de registo de trabalhador autónomo',
   '/register?role=worker', null, 'Registe uma nova conta');
 await snap('03-registo-empregador.png', 'Formulário de registo de empregador',
