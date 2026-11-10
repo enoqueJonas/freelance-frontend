@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ProfileRolesPanel } from '../components/ProfileRolesPanel';
 import { mockApi } from '../services/mockApi';
@@ -25,6 +25,8 @@ import {
 export const Dashboard: React.FC = () => {
   const { user, profile, refreshUserData, uploadDocument } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
 
   // Master Lists
   const [userOffers, setUserOffers] = useState<Offer[]>([]);
@@ -75,6 +77,13 @@ export const Dashboard: React.FC = () => {
     setUserProposals([]);
     setUserContracts([]);
   }, [user?.role]);
+
+  // Um atalho de navegação deve abrir efectivamente o separador de vagas.
+  useEffect(() => {
+    if (user?.role === 'employer' && requestedTab === 'offers') {
+      setActiveTab('offers');
+    }
+  }, [requestedTab, user?.role]);
 
   const loadData = async () => {
     if (!user) return;
@@ -512,7 +521,7 @@ export const Dashboard: React.FC = () => {
             </div>
 
             <div className="bg-gradient-to-tr from-blue-50 to-indigo-50/50 rounded-2xl border border-blue-50 p-6 space-y-4">
-              <h4 className="font-bold text-gray-800 text-sm flex items-center gap-1.5"><Shield size={16} className="text-blue-600" /> Suporte e Árbitros</h4>
+              <h4 className="font-bold text-gray-800 text-sm flex items-center gap-1.5"><Shield size={16} className="text-blue-600" /> Acompanhamento de conflitos</h4>
               <p className="text-xs text-gray-550 leading-relaxed">
                 Pode reportar um conflito e conservar informação para acompanhamento administrativo. O protótipo não arbitra contratos nem processa pagamentos.
               </p>
