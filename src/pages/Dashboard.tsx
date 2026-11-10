@@ -7,8 +7,9 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { mockApi } from '../services/mockApi';
+import { PaymentTrackingPanel } from '../components/PaymentTrackingPanel';
 import { 
-  Offer, Proposal, Contract, Payment, User as SystemUser, Notification 
+  Offer, Proposal, Contract, User as SystemUser, Notification 
 } from '../types';
 import { 
   LayoutDashboard, PlusCircle, FileText, Send, UserCheck, 
@@ -39,12 +40,6 @@ export const Dashboard: React.FC = () => {
   const [offerDesc, setOfferDesc] = useState('');
   const [offerSuccess, setOfferSuccess] = useState(false);
   const [offerError, setOfferError] = useState('');
-
-  // Payment Form Escrow State
-  const [payingContract, setPayingContract] = useState<Contract | null>(null);
-  const [payoutMethod, setPayoutMethod] = useState<'M-Pesa' | 'e-Mola' | 'Transferência Bancária'>('M-Pesa');
-  const [payoutInProgress, setPayoutInProgress] = useState(false);
-  const [payoutSuccess, setPayoutSuccess] = useState(false);
 
   // Review Form state
   const [reviewContract, setReviewContract] = useState<Contract | null>(null);
@@ -175,29 +170,6 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const handlePayEscrow = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!payingContract) return;
-
-    setPayoutInProgress(true);
-    try {
-      await mockApi.payments.createPay(payingContract.id, {
-        amount: payingContract.budget,
-        method: payoutMethod
-      });
-      setPayoutSuccess(true);
-      await loadData();
-      setTimeout(() => {
-        setPayoutSuccess(false);
-        setPayingContract(null);
-      }, 3000);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setPayoutInProgress(false);
-    }
-  };
-
   const handleCompleteContract = async (contractId: number) => {
     setLoadingAction(true);
     try {
@@ -316,7 +288,7 @@ export const Dashboard: React.FC = () => {
             <p className="text-2xl font-bold text-emerald-600 mt-1">{userContracts.filter(c => c.status === 'active').length}</p>
           </div>
           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Sob Custódia (Escrow)</p>
+            <p className="text-xs font-bold text-gray-400 uppercase">Valor de contratos activos</p>
             <p className="text-2xl font-bold text-gray-700 font-mono mt-1">
               {userContracts.filter(c => c.status === 'active').reduce((acc, current) => acc + current.budget, 0).toLocaleString()} MT
             </p>
@@ -816,10 +788,10 @@ export const Dashboard: React.FC = () => {
         <div className="max-w-4xl space-y-6">
           <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
             <h2 className="font-bold text-lg text-gray-850 mb-2">
-              Meus Contratos Ativos & Escrow
+              Meus contratos e pagamentos externos
             </h2>
             <p className="text-xs text-gray-500 mb-6">
-              Todos os contratos no ServiPlus utilizam o modelo de custódia segura local para garantir que tanto desenvolvedor quanto empresa fiquem resguardados.
+              Acompanhe os valores acordados e os pagamentos declarados pelas partes. A plataforma não recebe, transfere nem guarda fundos.
             </p>
 
             {userContracts.length > 0 ? (
@@ -842,7 +814,7 @@ export const Dashboard: React.FC = () => {
                       </div>
 
                       <div className="text-right">
-                        <p className="text-[10px] text-gray-400 font-semibold">Orçamento em Custódia</p>
+                        <p className="text-[10px] text-gray-400 font-semibold">Valor acordado</p>
                         <p className="text-base font-bold font-mono text-gray-800">{con.budget.toLocaleString('pt-MZ')} MT</p>
                       </div>
                     </div>
@@ -902,13 +874,10 @@ export const Dashboard: React.FC = () => {
                             </button>
 
                             <button
-                              onClick={() => {
-                                handleCompleteContract(con.id);
-                                setPayingContract(con);
-                              }}
+                              onClick={() => handleCompleteContract(con.id)}
                               className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all cursor-pointer"
                             >
-                              Marcar como Entregue & Pagar
+                              Concluir serviço (sem confirmar pagamento)
                             </button>
                           </>
                         )}
@@ -928,7 +897,7 @@ export const Dashboard: React.FC = () => {
                         )}
                       </div>
                     </div>
-
+                    <PaymentTrackingPanel contract={con} userId={user.id} role={user.role} />
                   </div>
                 ))}
               </div>
@@ -1023,65 +992,6 @@ export const Dashboard: React.FC = () => {
             )}
           </div>
 
-        </div>
-      )}
-
-      {/* --------------------------- PAYMENT OVERLAY --------------------------- */}
-      {payingContract && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md p-6 border border-gray-100 shadow-xl space-y-5 animate-scale-in">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-bold text-lg text-gray-850">Garantia Escrow - Pagamento Seguro</h3>
-                <p className="text-xs text-gray-400">Projecto: {payingContract.title}</p>
-              </div>
-              <button onClick={() => setPayingContract(null)} className="text-gray-400 hover:text-gray-600 font-bold">×</button>
-            </div>
-
-            <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex justify-between items-center">
-              <span className="text-xs font-semibold text-emerald-800">Valor Total a Pagar</span>
-              <span className="text-lg font-mono font-bold text-emerald-950">{payingContract.budget.toLocaleString('pt-MZ')} MT</span>
-            </div>
-
-            <form onSubmit={handlePayEscrow} className="space-y-4 text-xs font-semibold text-gray-600">
-              <div>
-                <label className="block mb-1">Método de Liquidação</label>
-                <select
-                  value={payoutMethod}
-                  onChange={(e) => setPayoutMethod(e.target.value as any)}
-                  className="w-full px-3 py-2 bg-gray-55 border border-gray-200 rounded-xl focus:outline-none"
-                >
-                  <option value="M-Pesa">Vodacom M-Pesa (SMS instantâneo)</option>
-                  <option value="e-Mola">mCel e-Mola (SMS instantâneo)</option>
-                  <option value="Transferência Bancária">Transferência de Banco Local (Millennium BIM / Standard Bank)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block mb-1">Contacto Celular / NIB do Destinatário</label>
-                <input 
-                  type="text" 
-                  required
-                  placeholder="Ex: 84XXXXXXX ou NIB Oficial"
-                  className="w-full px-3 py-2 bg-gray-55 border border-gray-200 rounded-xl focus:outline-none"
-                />
-              </div>
-
-              {payoutSuccess ? (
-                <div className="bg-emerald-50 text-emerald-800 p-2.5 border border-emerald-100 rounded-lg text-center font-bold">
-                  ✓ Transação Concluída! Fundos creditados.
-                </div>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={payoutInProgress}
-                  className="w-full text-center py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  <CheckCircle2 size={16} /> {payoutInProgress ? 'Analisando PIN...' : 'Confirmar e Transferir Fundos'}
-                </button>
-              )}
-            </form>
-          </div>
         </div>
       )}
 
