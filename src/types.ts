@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type UserRole = 'employer' | 'worker' | 'admin';
+export type ProfileRole = 'employer' | 'worker';
+export type UserRole = ProfileRole | 'admin';
 
 export interface User {
   id: number;
@@ -11,7 +12,8 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
-  role: UserRole;
+  role: UserRole; // Papel activo na interface, não a única capacidade da conta
+  roles?: ProfileRole[]; // Perfis realmente existentes; opcional para dados de demonstração legados
   is_verified: boolean;
   date_joined: string;
 }
@@ -102,14 +104,35 @@ export interface Contract {
   signedByEmployer: boolean;
 }
 
+export type PaymentMethod = 'M-Pesa' | 'e-Mola' | 'Transferência Bancária' | 'Outro';
+export type PaymentStage = 'ADVANCE' | 'MILESTONE' | 'FINAL';
+export type PaymentStatus = 'REPORTED_PAID' | 'CONFIRMED' | 'CONTESTED';
+
+export interface PaymentEvent {
+  status: PaymentStatus;
+  actorUserId: number;
+  recordedAt: string;
+  note: string;
+}
+
+/** Declaração de pagamento externo, não é comprovativo de liquidação financeira. */
 export interface Payment {
   id: number;
   contractId: number;
   amount: number;
-  payoutMethod: 'M-Pesa' | 'e-Mola' | 'Transferência Bancária';
-  status: 'pending' | 'completed' | 'failed';
-  refCode: string;
+  method: PaymentMethod;
+  stage: PaymentStage;
+  moment: string;
+  paidOn: string;
+  externalReference?: string;
+  notes?: string;
+  status: PaymentStatus;
+  reportedByUserId: number;
+  respondedByUserId?: number;
+  responseNote?: string;
   createdAt: string;
+  updatedAt: string;
+  history: PaymentEvent[];
 }
 
 export interface Message {
@@ -128,6 +151,49 @@ export interface Notification {
   createdAt: string;
   type: 'offer' | 'proposal' | 'contract' | 'payment' | 'message' | 'system' | 'verification';
 }
+
+export type DisputeStatus = 'OPEN' | 'UNDER_REVIEW' | 'WAITING_INFORMATION' | 'RESOLVED' | 'CLOSED';
+export type DisputeCategory = 'SCOPE' | 'DEADLINE' | 'DELIVERABLE' | 'PAYMENT' | 'COMMUNICATION' | 'OTHER';
+export type DisputeAction =
+  | 'REPORTED' | 'REVIEW_STARTED' | 'INFORMATION_REQUESTED' | 'EVIDENCE_ADDED'
+  | 'INFORMATION_SUPPLIED' | 'ADMINISTRATIVE_RESULT' | 'ADMINISTRATIVELY_CLOSED';
+
+export interface DisputeEvidence {
+  id: number;
+  authorUserId: number;
+  description: string;
+  url?: string;
+  createdAt: string;
+}
+
+export interface DisputeEvent {
+  id: number;
+  action: DisputeAction;
+  actorUserId: number;
+  recordedAt: string;
+  note: string;
+  statusAfter: DisputeStatus;
+}
+
+export interface Dispute {
+  id: number;
+  contractId: number;
+  employerUserId: number;
+  workerUserId: number;
+  reportedByUserId: number;
+  category: DisputeCategory;
+  description: string;
+  status: DisputeStatus;
+  requestedFromUserId?: number;
+  administrativeResult?: string;
+  evidence: DisputeEvidence[];
+  events: DisputeEvent[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Os estados de Dispute são independentes dos estados de Contract.
+// RESOLVED/CLOSED descrevem o acompanhamento administrativo, sem sentença arbitral.
 
 export interface Review {
   id: number;

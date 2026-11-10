@@ -52,7 +52,7 @@ export const LandingPage: React.FC = () => {
               Ligue-se aos melhores <span className="text-primary">profissionais de TI</span> em Maputo.
             </h1>
             <p className="text-base sm:text-lg text-gray-600 max-w-2xl leading-relaxed">
-              Trabalho remoto ou presencial. A plataforma moçambicana segura que garante o depósito sob custódia (escrow) com integração nativa M-Pesa e e-Mola.
+              Protótipo de conexão entre trabalhadores autónomos de TI e empregadores em Maputo. Permite acompanhar oportunidades, acordos e declarações de pagamentos externos; não processa transacções.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -75,10 +75,10 @@ export const LandingPage: React.FC = () => {
                 <CheckCircle size={16} className="text-emerald-500" /> Identidades Verificadas
               </div>
               <div className="flex items-center gap-1.5">
-                <CheckCircle size={16} className="text-emerald-500" /> Custódia Segura via Carteiras Móveis
+                <CheckCircle size={16} className="text-emerald-500" /> Acompanhamento de pagamentos externos
               </div>
               <div className="flex items-center gap-1.5">
-                <CheckCircle size={16} className="text-emerald-500" /> Mediação de Litígios Local
+                <CheckCircle size={16} className="text-emerald-500" /> Registo e acompanhamento de conflitos
               </div>
             </div>
           </div>
@@ -126,7 +126,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Local Escrow & Security Trust Card */}
+      {/* Acompanhamento declarativo, sem custódia */}
       <section className="bg-gradient-to-r from-primary to-[#1E62AE] text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
@@ -134,13 +134,13 @@ export const LandingPage: React.FC = () => {
               COMO TRABALHAMOS
             </span>
             <h2 className="font-sans font-extrabold text-3xl sm:text-4xl">
-              Segurança e Transparência nos seus pagamentos
+              Clareza nas condições e no acompanhamento de pagamentos
             </h2>
             <p className="text-blue-100 text-base leading-relaxed">
-              Trabalhamos com o método de **Escrow (Custódia Seguro)**. Quando aceita uma proposta, o empregador efectua o pagamento em depósito via carteira móvel (M-Pesa ou e-Mola) ou transferência bancária.
+              As partes definem valores e condições no acordo. Quando ocorre um pagamento fora da aplicação, o empregador pode registar a declaração com método, etapa e referência fornecida pelo prestador, quando disponível.
             </p>
             <p className="text-blue-100 text-base leading-relaxed">
-              Os valores ficam retidos com segurança na nossa plataforma e só são libertados para o freelancer quando o projecto for entregue e você autorizar. Se houver divergências, a nossa equipa local de arbitragem entra em acção para analisar o código e documentação. Do Bairro Polana até à Matola, oferecemos total fiabilidade.
+              O trabalhador pode confirmar a recepção ou contestar a declaração. O protótipo não recebe, transfere, guarda ou verifica fundos. Os conflitos podem ser reportados e acompanhados administrativamente, sem arbitragem jurídica pela plataforma.
             </p>
           </div>
 
@@ -150,8 +150,8 @@ export const LandingPage: React.FC = () => {
                 <ShieldCheck size={22} />
               </div>
               <div>
-                <h4 className="text-lg font-bold">100% Verificado</h4>
-                <p className="text-sm text-blue-150 text-blue-200 mt-1">Todos os utilizadores passam por um processo rigoroso de verificação de documentos (NUIT, Bilhete de Identidade ou Registo Comercial).</p>
+                <h4 className="text-lg font-bold">Verificação de perfis</h4>
+                <p className="text-sm text-blue-150 text-blue-200 mt-1">Os perfis podem apresentar informação e estados de verificação. A validação efectiva depende de procedimentos próprios e não é garantida pelo protótipo.</p>
               </div>
             </div>
 
@@ -160,8 +160,8 @@ export const LandingPage: React.FC = () => {
                 <Cpu size={22} />
               </div>
               <div>
-                <h4 className="text-lg font-bold">Integração nativa M-Pesa / e-Mola</h4>
-                <p className="text-sm text-blue-150 text-blue-200 mt-1">Soluções fáceis para pagar os profissionais instantaneamente utilizando aparelhos celulares locais, de forma rápida e segura.</p>
+                <h4 className="text-lg font-bold">Registo de pagamento externo</h4>
+                <p className="text-sm text-blue-150 text-blue-200 mt-1">As partes podem declarar pagamentos feitos por M-Pesa, e-Mola, transferência bancária ou outros meios. Não existe integração financeira activa.</p>
               </div>
             </div>
 
@@ -170,8 +170,8 @@ export const LandingPage: React.FC = () => {
                 <MessageSquare size={22} />
               </div>
               <div>
-                <h4 className="text-lg font-bold">Resolução Rápida de Litígios</h4>
-                <p className="text-sm text-blue-150 text-blue-200 mt-1">Se surgirem disputas contratuais, a nossa equipa de administradores em Maputo faz a auditoria em conformidade técnica.</p>
+                <h4 className="text-lg font-bold">Acompanhamento de ocorrências</h4>
+                <p className="text-sm text-blue-150 text-blue-200 mt-1">As partes podem reportar divergências e manter um histórico administrativo. O protótipo não toma decisões arbitrais vinculativas.</p>
               </div>
             </div>
           </div>

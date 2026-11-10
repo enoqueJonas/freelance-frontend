@@ -6,9 +6,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { ProfileRolesPanel } from '../components/ProfileRolesPanel';
 import { mockApi } from '../services/mockApi';
+import { PaymentTrackingPanel } from '../components/PaymentTrackingPanel';
+import { DisputeTrackingPanel } from '../components/DisputeTrackingPanel';
+import { AdminDisputesPanel } from '../components/AdminDisputesPanel';
+import { disputeService } from '../services/disputes';
 import { 
-  Offer, Proposal, Contract, Payment, User as SystemUser, Notification 
+  Offer, Proposal, Contract, User as SystemUser, Notification, ProfileRole 
 } from '../types';
 import { 
   LayoutDashboard, PlusCircle, FileText, Send, UserCheck, 
@@ -26,6 +31,7 @@ export const Dashboard: React.FC = () => {
   const [userContracts, setUserContracts] = useState<Contract[]>([]);
   const [pendingVerifications, setPendingVerifications] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<SystemUser[]>([]);
+  const [openDisputeCount, setOpenDisputeCount] = useState(0);
 
   // Selection states
   const [activeTab, setActiveTab] = useState<'overview' | 'offers' | 'proposals' | 'contracts' | 'admin'>('overview');
@@ -39,12 +45,6 @@ export const Dashboard: React.FC = () => {
   const [offerDesc, setOfferDesc] = useState('');
   const [offerSuccess, setOfferSuccess] = useState(false);
   const [offerError, setOfferError] = useState('');
-
-  // Payment Form Escrow State
-  const [payingContract, setPayingContract] = useState<Contract | null>(null);
-  const [payoutMethod, setPayoutMethod] = useState<'M-Pesa' | 'e-Mola' | 'Transferência Bancária'>('M-Pesa');
-  const [payoutInProgress, setPayoutInProgress] = useState(false);
-  const [payoutSuccess, setPayoutSuccess] = useState(false);
 
   // Review Form state
   const [reviewContract, setReviewContract] = useState<Contract | null>(null);
@@ -66,6 +66,14 @@ export const Dashboard: React.FC = () => {
     }
     loadData();
   }, [user]);
+
+  // Não manter uma aba exclusiva do papel anterior após mudar de contexto.
+  useEffect(() => {
+    setActiveTab('overview');
+    setUserOffers([]);
+    setUserProposals([]);
+    setUserContracts([]);
+  }, [user?.role]);
 
   const loadData = async () => {
     if (!user) return;
@@ -100,6 +108,8 @@ export const Dashboard: React.FC = () => {
 
         const allContracts = await mockApi.contracts.list();
         setUserContracts(allContracts);
+        const cases = await disputeService.listForUser(user.id);
+        setOpenDisputeCount(cases.filter(item => item.status !== 'RESOLVED' && item.status !== 'CLOSED').length);
       }
     } catch (err) {
       console.error(err);
@@ -175,29 +185,6 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const handlePayEscrow = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!payingContract) return;
-
-    setPayoutInProgress(true);
-    try {
-      await mockApi.payments.createPay(payingContract.id, {
-        amount: payingContract.budget,
-        method: payoutMethod
-      });
-      setPayoutSuccess(true);
-      await loadData();
-      setTimeout(() => {
-        setPayoutSuccess(false);
-        setPayingContract(null);
-      }, 3000);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setPayoutInProgress(false);
-    }
-  };
-
   const handleCompleteContract = async (contractId: number) => {
     setLoadingAction(true);
     try {
@@ -210,28 +197,13 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const handleRaiseDispute = async (contractId: number) => {
-    const conf = window.confirm("Tens a certeza que desejas entrar em disputa oficial para mediação técnica com a equipa ServiPlus?");
-    if (!conf) return;
-
-    setLoadingAction(true);
-    try {
-      await mockApi.contracts.dispute(contractId, user!.id);
-      await loadData();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingAction(false);
-    }
-  };
-
   // ---- REVIEW ACTIONS ----
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!reviewContract) return;
+    if (!reviewContract || !user || user.role === 'admin') return;
 
     try {
-      await mockApi.reviews.create(reviewContract.id, user!.id, reviewScore, reviewComment);
+      await mockApi.reviews.create(reviewContract.id, user.id, user.role, reviewScore, reviewComment);
       setReviewSuccess(true);
       setReviewComment('');
       loadData();
@@ -245,22 +217,10 @@ export const Dashboard: React.FC = () => {
   };
 
   // ---- ADMIN ACTIONS ----
-  const handleVerifyDocument = async (userId: number, approve: boolean) => {
+  const handleVerifyDocument = async (userId: number, role: ProfileRole, approve: boolean) => {
     setLoadingAction(true);
     try {
-      await mockApi.admin.approveDocument(userId, approve);
-      await loadData();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingAction(false);
-    }
-  };
-
-  const handleAdminResolveDispute = async (contractId: number, outcome: 'completed' | 'active') => {
-    setLoadingAction(true);
-    try {
-      await mockApi.admin.resolveDispute(contractId, outcome);
+      await mockApi.admin.approveDocument(userId, role, approve);
       await loadData();
     } catch (err) {
       console.error(err);
@@ -316,7 +276,7 @@ export const Dashboard: React.FC = () => {
             <p className="text-2xl font-bold text-emerald-600 mt-1">{userContracts.filter(c => c.status === 'active').length}</p>
           </div>
           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Sob Custódia (Escrow)</p>
+            <p className="text-xs font-bold text-gray-400 uppercase">Valor de contratos activos</p>
             <p className="text-2xl font-bold text-gray-700 font-mono mt-1">
               {userContracts.filter(c => c.status === 'active').reduce((acc, current) => acc + current.budget, 0).toLocaleString()} MT
             </p>
@@ -336,8 +296,8 @@ export const Dashboard: React.FC = () => {
             <p className="text-2xl font-bold text-orange-500 mt-1 bg-orange-50 px-2 py-0.5 rounded inline-block">{pendingVerifications.length}</p>
           </div>
           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Disputas em Curso</p>
-            <p className="text-2xl font-bold text-red-600 mt-1 bg-red-50 px-2 py-0.5 rounded inline-block">{userContracts.filter(c => c.status === 'disputed').length}</p>
+            <p className="text-xs font-bold text-gray-400 uppercase">Conflitos em acompanhamento</p>
+            <p className="text-2xl font-bold text-red-600 mt-1 bg-red-50 px-2 py-0.5 rounded inline-block">{openDisputeCount}</p>
           </div>
           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
             <p className="text-xs font-bold text-gray-400 uppercase">Total Contratado</p>
@@ -369,6 +329,7 @@ export const Dashboard: React.FC = () => {
         </button>
       </div>
 
+      {user.role !== 'admin' && <ProfileRolesPanel />}
       {renderStatsRow()}
 
       {/* Tabs list based on user roles */}
@@ -561,7 +522,7 @@ export const Dashboard: React.FC = () => {
             <div className="bg-gradient-to-tr from-blue-50 to-indigo-50/50 rounded-2xl border border-blue-50 p-6 space-y-4">
               <h4 className="font-bold text-gray-800 text-sm flex items-center gap-1.5"><Shield size={16} className="text-blue-600" /> Suporte e Árbitros</h4>
               <p className="text-xs text-gray-550 leading-relaxed">
-                Está com dificuldades em validar o escopo técnico do projeto ou o pagamento M-Pesa de um projeto? A nossa equipa de administradores em Maputo faz a mediação técnica do código.
+                Pode reportar um conflito e conservar informação para acompanhamento administrativo. O protótipo não arbitra contratos nem processa pagamentos.
               </p>
             </div>
           </div>
@@ -762,7 +723,7 @@ export const Dashboard: React.FC = () => {
                         <div className="flex items-center gap-4 text-xxs font-semibold">
                           <span className="text-amber-500 font-bold flex items-center gap-0.5">★ {prop.workerProfile.averageRating}</span>
                           <span className="text-gray-400">{prop.workerProfile.completedJobs} Projectos</span>
-                          <Link to={`/profile/${prop.workerProfile.userId}`} className="text-blue-600 font-bold hover:underline">Ver Perfil</Link>
+                          <Link to={`/profile/${prop.workerProfile.userId}?role=worker`} className="text-blue-600 font-bold hover:underline">Ver Perfil</Link>
                         </div>
                       </div>
                     )}
@@ -816,10 +777,10 @@ export const Dashboard: React.FC = () => {
         <div className="max-w-4xl space-y-6">
           <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
             <h2 className="font-bold text-lg text-gray-850 mb-2">
-              Meus Contratos Ativos & Escrow
+              Meus contratos e pagamentos externos
             </h2>
             <p className="text-xs text-gray-500 mb-6">
-              Todos os contratos no ServiPlus utilizam o modelo de custódia segura local para garantir que tanto desenvolvedor quanto empresa fiquem resguardados.
+              Acompanhe o valor acordado, pagamentos externos declarados e conflitos reportados. O protótipo não recebe nem guarda fundos.
             </p>
 
             {userContracts.length > 0 ? (
@@ -842,7 +803,7 @@ export const Dashboard: React.FC = () => {
                       </div>
 
                       <div className="text-right">
-                        <p className="text-[10px] text-gray-400 font-semibold">Orçamento em Custódia</p>
+                        <p className="text-[10px] text-gray-400 font-semibold">Valor acordado</p>
                         <p className="text-base font-bold font-mono text-gray-800">{con.budget.toLocaleString('pt-MZ')} MT</p>
                       </div>
                     </div>
@@ -895,20 +856,10 @@ export const Dashboard: React.FC = () => {
                         {user.role === 'employer' && con.status === 'active' && (
                           <>
                             <button
-                              onClick={() => handleRaiseDispute(con.id)}
-                              className="px-3 py-1.5 text-xs font-semibold text-rose-650 hover:bg-rose-50 rounded-lg flex items-center gap-1 cursor-pointer"
-                            >
-                              <Scale size={14} /> Levantar Disputa
-                            </button>
-
-                            <button
-                              onClick={() => {
-                                handleCompleteContract(con.id);
-                                setPayingContract(con);
-                              }}
+                              onClick={() => handleCompleteContract(con.id)}
                               className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all cursor-pointer"
                             >
-                              Marcar como Entregue & Pagar
+                              Concluir serviço (sem confirmar pagamento)
                             </button>
                           </>
                         )}
@@ -928,7 +879,8 @@ export const Dashboard: React.FC = () => {
                         )}
                       </div>
                     </div>
-
+                    <PaymentTrackingPanel contract={con} userId={user.id} role={user.role} />
+                    <DisputeTrackingPanel contract={con} userId={user.id} />
                   </div>
                 ))}
               </div>
@@ -951,7 +903,7 @@ export const Dashboard: React.FC = () => {
             {pendingVerifications.length > 0 ? (
               <div className="space-y-4">
                 {pendingVerifications.map((item) => (
-                  <div key={item.id} className="p-4 border border-gray-100 rounded-xl space-y-3.5 text-xs">
+                  <div key={`${item.role}-${item.userId}`} className="p-4 border border-gray-100 rounded-xl space-y-3.5 text-xs">
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-bold text-gray-800 text-sm">{item.name}</p>
@@ -967,14 +919,14 @@ export const Dashboard: React.FC = () => {
 
                     <div className="flex justify-end gap-2">
                       <button
-                        onClick={() => handleVerifyDocument(item.userId, false)}
+                        onClick={() => handleVerifyDocument(item.userId, item.role as ProfileRole, false)}
                         className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg cursor-pointer"
                       >
                         Recusar BI
                       </button>
                       
                       <button
-                        onClick={() => handleVerifyDocument(item.userId, true)}
+                        onClick={() => handleVerifyDocument(item.userId, item.role as ProfileRole, true)}
                         className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg cursor-pointer"
                       >
                         Aprovar e Verificar Conta ✓
@@ -988,100 +940,8 @@ export const Dashboard: React.FC = () => {
             )}
           </div>
 
-          {/* Manage active disputes */}
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm h-auto">
-            <h2 className="font-semibold text-gray-850 text-base mb-4 flex items-center gap-1.5 border-b border-gray-50 pb-2"><Scale size={18} /> Auditoria de Disputas</h2>
-            
-            {userContracts.filter(c => c.status === 'disputed').length > 0 ? (
-              <div className="space-y-4">
-                {userContracts.filter(c => c.status === 'disputed').map((dis) => (
-                  <div key={dis.id} className="p-3.5 border border-gray-150 rounded-xl space-y-3.5 text-xs">
-                    <div>
-                      <p className="font-bold text-gray-800">{dis.title}</p>
-                      <p className="text-xxs text-gray-400 font-semibold font-mono mt-0.5">Orçamento sob disputa: {dis.budget.toLocaleString()} MT</p>
-                    </div>
+          <AdminDisputesPanel adminId={user.id} onUpdated={loadData} />
 
-                    <div className="flex flex-col gap-2 pt-2 border-t border-gray-100">
-                      <button
-                        onClick={() => handleAdminResolveDispute(dis.id, 'completed')}
-                        className="w-full text-center py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-lg"
-                      >
-                        Decidir a favor do Freelancer ✓
-                      </button>
-                      <button
-                        onClick={() => handleAdminResolveDispute(dis.id, 'active')}
-                        className="w-full text-center py-2 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg"
-                      >
-                        Reabrir Contrato para Ajuste Técnica ↺
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-450 text-xs">Não existem litígios ou disputas pendentes em Moçambique.</p>
-            )}
-          </div>
-
-        </div>
-      )}
-
-      {/* --------------------------- PAYMENT OVERLAY --------------------------- */}
-      {payingContract && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md p-6 border border-gray-100 shadow-xl space-y-5 animate-scale-in">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-bold text-lg text-gray-850">Garantia Escrow - Pagamento Seguro</h3>
-                <p className="text-xs text-gray-400">Projecto: {payingContract.title}</p>
-              </div>
-              <button onClick={() => setPayingContract(null)} className="text-gray-400 hover:text-gray-600 font-bold">×</button>
-            </div>
-
-            <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex justify-between items-center">
-              <span className="text-xs font-semibold text-emerald-800">Valor Total a Pagar</span>
-              <span className="text-lg font-mono font-bold text-emerald-950">{payingContract.budget.toLocaleString('pt-MZ')} MT</span>
-            </div>
-
-            <form onSubmit={handlePayEscrow} className="space-y-4 text-xs font-semibold text-gray-600">
-              <div>
-                <label className="block mb-1">Método de Liquidação</label>
-                <select
-                  value={payoutMethod}
-                  onChange={(e) => setPayoutMethod(e.target.value as any)}
-                  className="w-full px-3 py-2 bg-gray-55 border border-gray-200 rounded-xl focus:outline-none"
-                >
-                  <option value="M-Pesa">Vodacom M-Pesa (SMS instantâneo)</option>
-                  <option value="e-Mola">mCel e-Mola (SMS instantâneo)</option>
-                  <option value="Transferência Bancária">Transferência de Banco Local (Millennium BIM / Standard Bank)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block mb-1">Contacto Celular / NIB do Destinatário</label>
-                <input 
-                  type="text" 
-                  required
-                  placeholder="Ex: 84XXXXXXX ou NIB Oficial"
-                  className="w-full px-3 py-2 bg-gray-55 border border-gray-200 rounded-xl focus:outline-none"
-                />
-              </div>
-
-              {payoutSuccess ? (
-                <div className="bg-emerald-50 text-emerald-800 p-2.5 border border-emerald-100 rounded-lg text-center font-bold">
-                  ✓ Transação Concluída! Fundos creditados.
-                </div>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={payoutInProgress}
-                  className="w-full text-center py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  <CheckCircle2 size={16} /> {payoutInProgress ? 'Analisando PIN...' : 'Confirmar e Transferir Fundos'}
-                </button>
-              )}
-            </form>
-          </div>
         </div>
       )}
 
