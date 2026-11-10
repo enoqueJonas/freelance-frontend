@@ -270,7 +270,7 @@ await snap('15-moderacao-conflitos.png', 'Acompanhamento administrativo de ocorr
 const readme = [
   '# Capturas de ecrã — Protótipo ConecTA',
   '',
-  '**Origem:** frontend React, branch de capturas \`chore/conecta-monografia-capturas\`, derivada da implementação não integrada do PR #12.',
+  '**Origem:** frontend React, branch de capturas \`design/conecta-petrol-v1\`, derivada da implementação não integrada do PR #12.',
   '**Ambiente:** navegador Chromium, 1440×900 CSS px, escala 2×, fuso Africa/Maputo, dados exclusivamente sintéticos.',
   '**Natureza:** capturas de uma execução demonstrativa, não provas de validação de requisitos de segurança, de integração com Django ou de testes com utilizadores.',
   '',
@@ -292,7 +292,7 @@ const readme = [
 await writeFile(path.join(OUT, 'LEIA-ME-legendas.md'), readme);
 await writeFile(path.join(OUT, 'capturas-manifesto.json'),
   JSON.stringify({
-    branch: 'chore/conecta-monografia-capturas',
+    branch: 'design/conecta-petrol-v1',
     source: 'feat/conecta-rf13-rf14-agreement-versions',
     generated_at: new Date().toISOString(),
     viewport: {width:1440,height:900,scale:2},
