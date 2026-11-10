@@ -78,7 +78,7 @@ export const LandingPage: React.FC = () => {
                 <CheckCircle size={16} className="text-emerald-500" /> Custódia Segura via Carteiras Móveis
               </div>
               <div className="flex items-center gap-1.5">
-                <CheckCircle size={16} className="text-emerald-500" /> Mediação de Litígios Local
+                <CheckCircle size={16} className="text-emerald-500" /> Reporte e acompanhamento de conflitos
               </div>
             </div>
           </div>
@@ -140,7 +140,7 @@ export const LandingPage: React.FC = () => {
               Trabalhamos com o método de **Escrow (Custódia Seguro)**. Quando aceita uma proposta, o empregador efectua o pagamento em depósito via carteira móvel (M-Pesa ou e-Mola) ou transferência bancária.
             </p>
             <p className="text-blue-100 text-base leading-relaxed">
-              Os valores ficam retidos com segurança na nossa plataforma e só são libertados para o freelancer quando o projecto for entregue e você autorizar. Se houver divergências, a nossa equipa local de arbitragem entra em acção para analisar o código e documentação. Do Bairro Polana até à Matola, oferecemos total fiabilidade.
+              Os valores ficam retidos com segurança na nossa plataforma e só são libertados para o freelancer quando o projecto for entregue e você autorizar. Se houver divergências, as partes podem reportar os factos para acompanhamento administrativo, sem atribuição de poderes arbitrais à plataforma. Do Bairro Polana até à Matola, oferecemos total fiabilidade.
             </p>
           </div>
 
@@ -170,8 +170,8 @@ export const LandingPage: React.FC = () => {
                 <MessageSquare size={22} />
               </div>
               <div>
-                <h4 className="text-lg font-bold">Resolução Rápida de Litígios</h4>
-                <p className="text-sm text-blue-150 text-blue-200 mt-1">Se surgirem disputas contratuais, a nossa equipa de administradores em Maputo faz a auditoria em conformidade técnica.</p>
+                <h4 className="text-lg font-bold">Acompanhamento documental de conflitos</h4>
+                <p className="text-sm text-blue-150 text-blue-200 mt-1">Os utilizadores podem reportar factos e acrescentar evidências. A administração regista pedidos de informação e encerramentos, sem decidir direitos contratuais.</p>
               </div>
             </div>
           </div>
