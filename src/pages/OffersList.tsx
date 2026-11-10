@@ -181,7 +181,7 @@ export const OffersList: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Filters Sidebar */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm self-start h-auto">
+        <div className="conecta-surface p-6 self-start h-auto">
           <div className="flex justify-between items-center pb-4 border-b border-gray-100 mb-5">
             <span className="font-bold text-sm text-gray-800 flex items-center gap-1.5">
               <SlidersHorizontal size={16} className="text-primary" /> Filtros Ativos
@@ -280,7 +280,7 @@ export const OffersList: React.FC = () => {
                   </div>
                 ))
               ) : (
-                <div className="col-span-2 text-center py-16 bg-white border border-gray-100 rounded-2xl p-8">
+                <div className="col-span-2 text-center py-16 conecta-surface p-8">
                   <p className="text-sm font-medium text-gray-500">Nenhum projecto corresponde aos seus critérios.</p>
                   <button onClick={handleClearFilters} className="mt-3 text-xs text-primary bg-primary/10 px-3 py-1.5 rounded-lg font-bold">
                     Mostrar Todas as Vagas
