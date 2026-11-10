@@ -129,6 +129,49 @@ export interface Notification {
   type: 'offer' | 'proposal' | 'contract' | 'payment' | 'message' | 'system' | 'verification';
 }
 
+export type DisputeStatus = 'OPEN' | 'UNDER_REVIEW' | 'WAITING_INFORMATION' | 'RESOLVED' | 'CLOSED';
+export type DisputeCategory = 'SCOPE' | 'DEADLINE' | 'DELIVERABLE' | 'PAYMENT' | 'COMMUNICATION' | 'OTHER';
+export type DisputeAction =
+  | 'REPORTED' | 'REVIEW_STARTED' | 'INFORMATION_REQUESTED' | 'EVIDENCE_ADDED'
+  | 'INFORMATION_SUPPLIED' | 'ADMINISTRATIVE_RESULT' | 'ADMINISTRATIVELY_CLOSED';
+
+export interface DisputeEvidence {
+  id: number;
+  authorUserId: number;
+  description: string;
+  url?: string;
+  createdAt: string;
+}
+
+export interface DisputeEvent {
+  id: number;
+  action: DisputeAction;
+  actorUserId: number;
+  recordedAt: string;
+  note: string;
+  statusAfter: DisputeStatus;
+}
+
+export interface Dispute {
+  id: number;
+  contractId: number;
+  employerUserId: number;
+  workerUserId: number;
+  reportedByUserId: number;
+  category: DisputeCategory;
+  description: string;
+  status: DisputeStatus;
+  requestedFromUserId?: number;
+  administrativeResult?: string;
+  evidence: DisputeEvidence[];
+  events: DisputeEvent[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Os estados de Dispute são independentes dos estados de Contract.
+// RESOLVED/CLOSED descrevem o acompanhamento administrativo, sem sentença arbitral.
+
 export interface Review {
   id: number;
   contractId: number;
