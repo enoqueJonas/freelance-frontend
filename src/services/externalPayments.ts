@@ -77,9 +77,11 @@ export const externalPayments = {
     }
     const cents = Math.round(input.amount * 100);
     if (!Number.isFinite(input.amount) || !Number.isSafeInteger(cents) || cents <= 0 ||
+      Math.abs(input.amount * 100 - cents) > 0.00001 ||
       !VALID_METHODS.includes(input.method) || !VALID_STAGES.includes(input.stage) ||
-      !input.moment.trim() || !/^\\d{4}-\\d{2}-\\d{2}$/.test(input.paidOn) ||
+      !input.moment.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(input.paidOn) ||
       !Number.isFinite(Date.parse(input.paidOn)) ||
+      new Date(input.paidOn).toISOString().slice(0, 10) !== input.paidOn ||
       input.paidOn > new Date().toISOString().slice(0, 10)) {
       throw new Error('Indique valor positivo, método, etapa, momento e uma data válida.');
     }
