@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Contract, Payment, PaymentMethod, PaymentStage, UserRole } from '../types';
+import { AgreementVersion, Contract, Payment, PaymentMethod, PaymentStage, UserRole } from '../types';
+import { agreements } from '../services/agreements';
 import { externalPayments } from '../services/externalPayments';
 
 interface Props {
@@ -21,6 +22,8 @@ const statusLabels = {
 export const PaymentTrackingPanel: React.FC<Props> = ({ contract, userId, role }) => {
   const [items, setItems] = useState<Payment[]>([]);
   const [legacyCount, setLegacyCount] = useState(0);
+  const [agreement, setAgreement] = useState<AgreementVersion | null>(null);
+  const [conditionId, setConditionId] = useState('');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -39,10 +42,19 @@ export const PaymentTrackingPanel: React.FC<Props> = ({ contract, userId, role }
   const employer = role === 'employer' && contract.employerId === userId;
   const worker = role === 'worker' && contract.workerProfile.userId === userId;
   const eligible = contract.status === 'active' || contract.status === 'completed';
+  const selectedCondition = agreement?.terms.paymentConditions.find(c => c.id === conditionId)
+    || agreement?.terms.paymentConditions[0];
 
   const load = async () => {
     try {
-      const data = await externalPayments.listForContract(contract.id, userId);
+      const [data, version] = await Promise.all([
+        externalPayments.listForContract(contract.id, userId),
+        agreements.activeForContract(contract.id, userId)
+      ]);
+      setAgreement(version);
+      if (version && !version.terms.paymentConditions.some(c => c.id === conditionId)) {
+        setConditionId(version.terms.paymentConditions[0]?.id || '');
+      }
       setItems(data.items);
       setLegacyCount(data.legacyUnverifiedCount);
     } catch (err: any) {
@@ -57,7 +69,7 @@ export const PaymentTrackingPanel: React.FC<Props> = ({ contract, userId, role }
     setSuccess('');
     setLoading(true);
     void load();
-  }, [contract.id, userId]);
+  }, [contract, userId]);
 
   const report = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -67,7 +79,12 @@ export const PaymentTrackingPanel: React.FC<Props> = ({ contract, userId, role }
     setSuccess('');
     try {
       await externalPayments.report(contract.id, userId, {
-        amount: Number(amount), method, stage, moment, paidOn, externalReference, notes
+        amount: Number(amount),
+        method: selectedCondition?.method || method,
+        stage: selectedCondition?.stage || stage,
+        moment: selectedCondition?.moment || moment,
+        agreementConditionId: selectedCondition?.id,
+        paidOn, externalReference, notes
       });
       setSuccess('Declaração registada. Aguarda a resposta do trabalhador.');
       setShowForm(false);
@@ -140,6 +157,7 @@ export const PaymentTrackingPanel: React.FC<Props> = ({ contract, userId, role }
                 <p className="text-gray-500">
                   Data indicada: {payment.paidOn}
                   {payment.externalReference ? ' · Referência informada: ' + payment.externalReference : ''}
+                  {payment.agreementVersionId ? ' · Acordo v' + payment.agreementVersionId + ' (ID da versão)' : ' · Registo sem associação a versão'}
                 </p>
                 {payment.notes && <p className="text-gray-600">Observação: {payment.notes}</p>}
                 {payment.responseNote && <p className="text-gray-600">Resposta: {payment.responseNote}</p>}
@@ -205,25 +223,50 @@ export const PaymentTrackingPanel: React.FC<Props> = ({ contract, userId, role }
                   value={amount} onChange={event => setAmount(event.target.value)} required
                   className="block mt-1 w-full p-2 border border-gray-200 rounded-lg" />
               </label>
-              <label className="block text-gray-600 font-semibold">Método externo
-                <select value={method} onChange={event => setMethod(event.target.value as PaymentMethod)}
-                  className="block mt-1 w-full p-2 border border-gray-200 rounded-lg">
-                  {methods.map(value => <option key={value} value={value}>{value}</option>)}
-                </select>
-              </label>
-              <label className="block text-gray-600 font-semibold">Etapa
-                <select value={stage} onChange={event => setStage(event.target.value as PaymentStage)}
-                  className="block mt-1 w-full p-2 border border-gray-200 rounded-lg">
-                  {(Object.keys(stageLabels) as PaymentStage[]).map(value => (
-                    <option key={value} value={value}>{stageLabels[value]}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="block text-gray-600 font-semibold">Momento / condição acordada
-                <input value={moment} onChange={event => setMoment(event.target.value)}
-                  placeholder="Ex.: após aceitação da primeira entrega" required
-                  className="block mt-1 w-full p-2 border border-gray-200 rounded-lg" />
-              </label>
+              {agreement && selectedCondition ? (
+                <div className="space-y-2 rounded-lg p-3 border border-blue-100 bg-blue-50/50">
+                  <label className="block text-blue-800 font-semibold">
+                    Condição do acordo aceite (versão {agreement.number})
+                    <select value={selectedCondition.id}
+                      onChange={event => setConditionId(event.target.value)}
+                      className="mt-1 block w-full border border-blue-200 rounded-lg p-2">
+                      {agreement.terms.paymentConditions.map(c => (
+                        <option key={c.id} value={c.id}>
+                          {stageLabels[c.stage]} · {c.amount.toLocaleString('pt-MZ')} MT · {c.method}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <p className="text-blue-800 font-medium">
+                    Método: {selectedCondition.method} · Momento: {selectedCondition.moment}
+                  </p>
+                  <p className="text-blue-700">Valor máximo acordado para esta etapa: {selectedCondition.amount.toLocaleString('pt-MZ')} MT.</p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-amber-800 bg-amber-50 p-2 rounded-lg">
+                    Contrato legado sem acordo versionado confirmado. Este registo não comprovará conformidade com RF18.
+                  </p>
+                  <label className="block text-gray-600 font-semibold">Método externo
+                    <select value={method} onChange={event => setMethod(event.target.value as PaymentMethod)}
+                      className="mt-1 block w-full p-2 border border-gray-200 rounded-lg">
+                      {methods.map(value => <option key={value} value={value}>{value}</option>)}
+                    </select>
+                  </label>
+                  <label className="block text-gray-600 font-semibold">Etapa
+                    <select value={stage} onChange={event => setStage(event.target.value as PaymentStage)}
+                      className="mt-1 block w-full p-2 border border-gray-200 rounded-lg">
+                      {(Object.keys(stageLabels) as PaymentStage[]).map(value => (
+                        <option key={value} value={value}>{stageLabels[value]}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block text-gray-600 font-semibold">Momento declarado
+                    <input value={moment} onChange={event => setMoment(event.target.value)}
+                      required className="mt-1 block w-full p-2 border border-gray-200 rounded-lg" />
+                  </label>
+                </>
+              )}
               <label className="block text-gray-600 font-semibold">Data indicada da transacção externa
                 <input type="date" max={new Date().toISOString().slice(0, 10)}
                   value={paidOn} onChange={event => setPaidOn(event.target.value)} required
