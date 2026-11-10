@@ -194,6 +194,10 @@ const setSession = async (userId, role) => {
     localStorage.setItem('serviplus_session_user',
       JSON.stringify({ ...user, role }));
   }, {userId, role});
+  // HashRouter may not reload the React authentication context on hash changes.
+  // Force a document reload so AuthProvider reads the synthetic localStorage session.
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForTimeout(350);
 };
 
 await snap('01-pagina-inicial.png', 'Página inicial da plataforma ConecTA', '/', null,
