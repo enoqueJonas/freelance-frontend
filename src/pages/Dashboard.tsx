@@ -6,6 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { ProfileRolesPanel } from '../components/ProfileRolesPanel';
 import { mockApi } from '../services/mockApi';
 import { 
   Offer, Proposal, Contract, Payment, User as SystemUser, Notification 
@@ -66,6 +67,14 @@ export const Dashboard: React.FC = () => {
     }
     loadData();
   }, [user]);
+
+  // Não manter uma aba exclusiva do papel anterior após mudar de contexto.
+  useEffect(() => {
+    setActiveTab('overview');
+    setUserOffers([]);
+    setUserProposals([]);
+    setUserContracts([]);
+  }, [user?.role]);
 
   const loadData = async () => {
     if (!user) return;
@@ -369,6 +378,7 @@ export const Dashboard: React.FC = () => {
         </button>
       </div>
 
+      {user.role !== 'admin' && <ProfileRolesPanel />}
       {renderStatsRow()}
 
       {/* Tabs list based on user roles */}
