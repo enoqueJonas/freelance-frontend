@@ -92,7 +92,7 @@ export const ProfileDetail: React.FC = () => {
   if (loading) {
     return (
       <div className="text-center py-24 select-none">
-        <p className="text-gray-500 font-medium animate-pulse">Obtendo dados do utilizador do ServiPlus...</p>
+        <p className="text-gray-500 font-medium animate-pulse">Obtendo dados do utilizador do ConecTA...</p>
       </div>
     );
   }
