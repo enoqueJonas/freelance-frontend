@@ -725,29 +725,7 @@ export const mockApi = {
       return false;
     },
 
-    async dispute(contractId: number, disputingUserId: number): Promise<boolean> {
-      await delay();
-      const contracts = getList<Contract>(CONTRACTS_KEY);
-      const idx = contracts.findIndex(c => c.id === contractId);
-      if (idx > -1) {
-        contracts[idx].status = 'disputed';
-        setList(CONTRACTS_KEY, contracts);
 
-        // Notify both parties and admin
-        const notifications = getList<Notification>(NOTIFICATIONS_KEY);
-        const msg = `O contrato para "${contracts[idx].title}" foi colocado sob disputa e será analisado pela arbitragem.`;
-        
-        notifications.unshift({ id: notifications.length + 1, userId: contracts[idx].employerId, text: msg, isRead: false, createdAt: new Date().toISOString(), type: 'contract' });
-        notifications.unshift({ id: notifications.length + 1, userId: contracts[idx].workerProfile.userId, text: msg, isRead: false, createdAt: new Date().toISOString(), type: 'contract' });
-        
-        // Notify all admins (User ID 6 is default seed admin)
-        notifications.unshift({ id: notifications.length + 1, userId: 6, text: `ALERTA DE DISPUTA: Contrato ID ${contractId} entre ${contracts[idx].employerProfile.companyName} e ${contracts[idx].workerProfile.firstName} entrou em disputa.`, isRead: false, createdAt: new Date().toISOString(), type: 'system' });
-        
-        setList(NOTIFICATIONS_KEY, notifications);
-        return true;
-      }
-      return false;
-    }
   },
 
   // ---- PAYMENTS ----
@@ -1081,24 +1059,7 @@ export const mockApi = {
       return true;
     },
 
-    async resolveDispute(contractId: number, status: 'completed' | 'active'): Promise<boolean> {
-      await delay();
-      const contracts = getList<Contract>(CONTRACTS_KEY);
-      const idx = contracts.findIndex(c => c.id === contractId);
-      if (idx > -1) {
-        contracts[idx].status = status;
-        setList(CONTRACTS_KEY, contracts);
 
-        const notifications = getList<Notification>(NOTIFICATIONS_KEY);
-        const decisionText = `A arbitragem do ServiPlus concluiu a análise da disputa do seu contrato "${contracts[idx].title}". O estado foi setado como ${status.toUpperCase()}.`;
-        
-        notifications.unshift({ id: notifications.length + 1, userId: contracts[idx].employerId, text: decisionText, isRead: false, createdAt: new Date().toISOString(), type: 'contract' });
-        notifications.unshift({ id: notifications.length + 1, userId: contracts[idx].workerProfile.userId, text: decisionText, isRead: false, createdAt: new Date().toISOString(), type: 'contract' });
-        
-        return true;
-      }
-      return false;
-    }
   },
 
   // ---- ADDITIONAL READ ENDPOINTS FOR THE SEARCH PAGES ----
