@@ -175,7 +175,7 @@ export const OffersList: React.FC = () => {
           Pesquisar Oportunidades de TI
         </h1>
         <p className="text-sm text-gray-500 mt-1">
-          Encontre os projectos mais recentes publicados no ecossistema serviplus em Maputo
+          Encontre os projectos mais recentes publicados no ecossistema ConecTA em Maputo
         </p>
       </div>
 
@@ -421,7 +421,7 @@ export const OffersList: React.FC = () => {
                   {profile?.documentStatus !== 'approved' && (
                     <div className="rounded-xl bg-rose-50 border border-rose-100 p-3.5 text-xs text-rose-800 flex flex-col gap-2 font-medium leading-relaxed">
                       <span className="flex items-center gap-2 font-bold"><AlertTriangle size={18} className="text-rose-550" /> Perfil Não Verificado</span>
-                      <span>O seu documento de identidade ou registo comercial ainda não foi aprovado pelo suporte ServiPlus. Por razões de conformidade legal, só profissionais verificados podem licitar projectos locais. Por favor, submeta os seus documentos no seu perfil.</span>
+                      <span>O seu documento de identidade ou registo comercial ainda não foi aprovado pelo suporte ConecTA. Por razões de conformidade legal, só profissionais verificados podem licitar projectos locais. Por favor, submeta os seus documentos no seu perfil.</span>
                     </div>
                   )}
 
