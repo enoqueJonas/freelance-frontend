@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { mockApi } from '../services/mockApi';
 import { WorkerProfile, EmployerProfile, Review, Offer, User } from '../types';
@@ -15,6 +15,8 @@ import {
 
 export const ProfileDetail: React.FC = () => {
   const { userId } = useParams();
+  const [searchParams] = useSearchParams();
+  const requestedRole = searchParams.get('role');
   const { user: currentUser } = useAuth();
   const navigate = useNavigate();
 
@@ -27,7 +29,7 @@ export const ProfileDetail: React.FC = () => {
 
   useEffect(() => {
     loadProfile();
-  }, [userId, currentUser]);
+  }, [userId, currentUser, requestedRole]);
 
   const loadProfile = async () => {
     setLoading(true);
@@ -50,10 +52,18 @@ export const ProfileDetail: React.FC = () => {
         setLoading(false);
         return;
       }
-      setTargetUser(matchedUser);
+      // Perfil público contextual, especialmente importante para contas com ambos os papéis.
+      const selectedRole = requestedRole === 'worker' || requestedRole === 'employer'
+        ? requestedRole
+        : currentUser?.id === resolvedUserId ? currentUser.role : matchedUser.role;
+      setTargetUser({ ...matchedUser, role: selectedRole });
+      setWorkerProfile(null);
+      setEmployerProfile(null);
+      setReviews([]);
+      setOffersList([]);
 
       // 2. Fetch specific profile based on role
-      if (matchedUser.role === 'worker') {
+      if (selectedRole === 'worker') {
         const workers = await mockApi.workers.list();
         const wProfile = workers.find(w => w.userId === resolvedUserId);
         if (wProfile) {
@@ -62,7 +72,7 @@ export const ProfileDetail: React.FC = () => {
           const listRev = await mockApi.reviews.listForTarget(resolvedUserId);
           setReviews(listRev);
         }
-      } else if (matchedUser.role === 'employer') {
+      } else if (selectedRole === 'employer') {
         const employers = await mockApi.employers.list();
         const eProfile = employers.find(e => e.userId === resolvedUserId);
         if (eProfile) {
