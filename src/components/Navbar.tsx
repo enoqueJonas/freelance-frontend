@@ -75,10 +75,9 @@ export const Navbar: React.FC = () => {
 
         {/* Role-Specific Shortcuts */}
         {user?.role === 'employer' && (
-          <Link to="/dashboard" className={linkStyle('/dashboard')} onClick={() => setIsOpen(false)}>
-            <span className="flex items-center gap-1.5 text-secondary hover:text-secondary/90 bg-secondary/10 px-2.5 py-1 rounded-md">
-              <PlusCircle size={16} /> Gerir Vagas
-            </span>
+          <Link to="/dashboard?tab=offers" onClick={() => setIsOpen(false)}
+            className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-extrabold bg-[#E6F2ED] text-[#0B655B] hover:bg-[#D7EBDD] transition-colors">
+            <PlusCircle size={16} /> Gerir Vagas
           </Link>
         )}
       </>
