@@ -310,7 +310,7 @@ export const OffersList: React.FC = () => {
                     {selectedOffer.category}
                   </span>
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">
-                    Ativo • Custódia Garantida
+                    Oportunidade activa
                   </span>
                 </div>
 

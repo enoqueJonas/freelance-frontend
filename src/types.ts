@@ -102,14 +102,35 @@ export interface Contract {
   signedByEmployer: boolean;
 }
 
+export type PaymentMethod = 'M-Pesa' | 'e-Mola' | 'Transferência Bancária' | 'Outro';
+export type PaymentStage = 'ADVANCE' | 'MILESTONE' | 'FINAL';
+export type PaymentStatus = 'REPORTED_PAID' | 'CONFIRMED' | 'CONTESTED';
+
+export interface PaymentEvent {
+  status: PaymentStatus;
+  actorUserId: number;
+  recordedAt: string;
+  note: string;
+}
+
+/** Declaração de pagamento externo, não é comprovativo de liquidação financeira. */
 export interface Payment {
   id: number;
   contractId: number;
   amount: number;
-  payoutMethod: 'M-Pesa' | 'e-Mola' | 'Transferência Bancária';
-  status: 'pending' | 'completed' | 'failed';
-  refCode: string;
+  method: PaymentMethod;
+  stage: PaymentStage;
+  moment: string;
+  paidOn: string;
+  externalReference?: string;
+  notes?: string;
+  status: PaymentStatus;
+  reportedByUserId: number;
+  respondedByUserId?: number;
+  responseNote?: string;
   createdAt: string;
+  updatedAt: string;
+  history: PaymentEvent[];
 }
 
 export interface Message {

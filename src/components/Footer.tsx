@@ -53,12 +53,12 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <span className="text-gray-500 flex items-center gap-1">
-                  Pagamento Garantido <ShieldCheck size={14} className="text-emerald-500" />
+                  Pagamentos registados externamente <ShieldCheck size={14} className="text-emerald-500" />
                 </span>
               </li>
               <li>
                 <span className="text-gray-550 block text-xs">
-                  Integração Direta via M-Pesa / e-Mola
+                  Sem integração financeira activa
                 </span>
               </li>
             </ul>
@@ -80,7 +80,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <span className="text-gray-400 block hover:text-white cursor-pointer transition-colors">
-                  Políticas de Escrow & Arbitragem
+                  Condições de pagamento e conflitos
                 </span>
               </li>
               <li>
@@ -93,12 +93,12 @@ export const Footer: React.FC = () => {
 
           {/* Col 4: Trust & Local Payments */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-white text-sm tracking-wider uppercase">Garantia Local</h3>
+            <h3 className="font-semibold text-white text-sm tracking-wider uppercase">Registos de pagamento</h3>
             <p className="text-xs text-gray-400">
-              Todas as transações e orçamentos do ServiPlus estão sujeitos a custódia segura (escrow). O pagamento só é transferido ao desenvolvedor após entrega e aprovação.
+              Os pagamentos são efectuados fora da aplicação. O protótipo regista declarações de pagamento e permite confirmação ou contestação pelas partes; não custodia fundos.
             </p>
             <div className="pt-2 border-t border-zinc-800">
-              <span className="text-xs font-semibold text-gray-400 block tracking-wider uppercase mb-2">Métodos Suportados:</span>
+              <span className="text-xs font-semibold text-gray-400 block tracking-wider uppercase mb-2">Métodos externos registáveis:</span>
               <div className="flex flex-wrap gap-2">
                 <span className="px-2 py-1 text-[10px] bg-zinc-800 text-emerald-400 rounded font-semibold border border-zinc-750">
                   M-Pesa
