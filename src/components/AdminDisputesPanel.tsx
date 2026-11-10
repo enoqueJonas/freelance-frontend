@@ -63,7 +63,7 @@ export const AdminDisputesPanel: React.FC<Props> = ({ adminId, onUpdated }) => {
   };
 
   return (
-    <section className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4"
+    <section className="lg:col-span-3 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4"
       aria-label="Gestão administrativa de conflitos">
       <div>
         <h3 className="font-bold text-base text-gray-850">Acompanhamento de conflitos</h3>
