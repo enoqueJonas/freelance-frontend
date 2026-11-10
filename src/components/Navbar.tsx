@@ -95,11 +95,11 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-2 flex-shrink-0">
               <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-extrabold text-xl shadow-md tracking-wider">
-                S+
+                CT
               </div>
               <div className="flex flex-col">
                 <span className="font-sans font-bold text-lg text-gray-900 leading-none tracking-tight">
-                  ServiPlus
+                  ConecTA
                 </span>
                 <span className="font-sans text-[10px] text-primary/80 font-bold uppercase tracking-wider">
                   Maputo Freelance
