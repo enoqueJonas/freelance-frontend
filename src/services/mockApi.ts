@@ -733,6 +733,8 @@ export const mockApi = {
     // A assinatura eletrónica demonstrativa só activa o contrato com a aceitação de AMBAS as partes.
     async sign(contractId: number, workerUserId: number): Promise<boolean> {
       try {
+        const contract = getList<Contract>(CONTRACTS_KEY).find(c => c.id === contractId);
+        if (!contract || contract.workerProfile.userId !== workerUserId) return false;
         const available = await agreements.listForContract(contractId, workerUserId);
         const pending = available.find(v => v.status === 'PENDING_APPROVAL');
         if (!pending) return false;
