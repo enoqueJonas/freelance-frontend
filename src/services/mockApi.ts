@@ -260,9 +260,10 @@ export const mockApi = {
         ? preferredRole
         : roles.includes(account.role as ProfileRole) ? account.role as ProfileRole : roles[0];
       if (!role) return null;
+      const profile = role === 'worker' ? worker : employer;
       return {
-        user: { ...account, role, roles },
-        profile: role === 'worker' ? worker : employer
+        user: { ...account, role, roles, is_verified: profile?.documentStatus === 'approved' },
+        profile
       };
     },
 
