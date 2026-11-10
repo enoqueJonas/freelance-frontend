@@ -72,7 +72,7 @@ export const LandingPage: React.FC = () => {
             
             <div className="flex flex-wrap gap-6 pt-6 text-xs text-gray-500 font-medium">
               <div className="flex items-center gap-1.5">
-                <CheckCircle size={16} className="text-emerald-500" /> Identidades Verificadas
+                <CheckCircle size={16} className="text-emerald-500" /> Perfis demonstrativos
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle size={16} className="text-emerald-500" /> Acompanhamento de pagamentos externos
