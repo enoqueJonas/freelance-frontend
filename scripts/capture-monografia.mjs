@@ -182,7 +182,23 @@ const fixture = await page.evaluate(() => {
   put('serviplus_contracts', [contract, ...get('serviplus_contracts').filter(c => c.id !== 900)]);
   put('conecta_agreement_versions_v1', [approved, amended]);
   put('serviplus_payments', [payment]);
-  put('conecta_disputes_v1', [dispute]);
+  const reportOpen = {
+    ...dispute,
+    id: 901,
+    category: 'COMMUNICATION',
+    description: 'As partes solicitam clarificação sobre a data da reunião técnica.',
+    status: 'OPEN',
+    requestedFromUserId: undefined,
+    reportedByUserId: employer.id,
+    evidence: [{ id: 1, authorUserId: employer.id,
+      description: 'Histórico sintético das mensagens de agendamento.',
+      createdAt: '2026-11-09T14:00:00Z' }],
+    events: [{ id: 1, action: 'REPORTED', actorUserId: employer.id,
+      recordedAt: '2026-11-09T14:00:00Z',
+      note: 'Reporte apresentado para acompanhamento administrativo', statusAfter: 'OPEN' }],
+    createdAt: '2026-11-09T14:00:00Z', updatedAt: '2026-11-09T14:00:00Z'
+  };
+  put('conecta_disputes_v1', [reportOpen, dispute]);
   put('serviplus_session_user', 'null');
   return { workerId: worker.id, employerId: employer.id, adminId: admin.id, workerEmail: worker.email, employerEmail: employer.email };
 });
@@ -230,9 +246,13 @@ await snap('10-gestao-contratos.png', 'Visão de contratos e acompanhamento',
 await snap('11-acordo-versoes.png', 'Versão aceite e proposta de alteração do acordo',
   null, '[aria-label="Acordos e versões"]', null,
   'Versão 1 ativa; versão 2 aguarda aceitação do trabalhador, ambas sintéticas.');
+await page.getByRole('button', { name: 'Registar pagamento realizado fora da plataforma' }).click();
 await snap('12-pagamentos-externos.png', 'Registo e acompanhamento declarativo de pagamentos externos',
   null, '[aria-label="Acompanhamento de pagamentos externos"]', null,
   'Não representa transferência, custódia nem confirmação financeira.');
+const disputePanel = page.locator('[aria-label="Reporte e acompanhamento de conflitos"]').first();
+await disputePanel.locator('summary').first().click();
+await disputePanel.locator('summary').nth(1).click();
 await snap('13-conflitos-contrato.png', 'Reporte e acompanhamento de conflitos associados ao contrato',
   null, '[aria-label="Reporte e acompanhamento de conflitos"]', null,
   'Acompanhamento administrativo sem poderes arbitrais.');
@@ -241,6 +261,8 @@ await setSession(fixture.adminId, 'admin');
 await snap('14-painel-administrador.png', 'Visão geral do administrador',
   '/dashboard', null, 'Moderação de BI');
 await page.getByRole('button', { name: /Moderação de BI/ }).click();
+const adminDisputes = page.locator('[aria-label="Gestão administrativa de conflitos"]').first();
+await adminDisputes.locator('summary').first().click();
 await snap('15-moderacao-conflitos.png', 'Acompanhamento administrativo de ocorrências',
   null, '[aria-label="Gestão administrativa de conflitos"]', null,
   'A administração regista eventos e pedidos de informação, sem decidir direitos contratuais.');
