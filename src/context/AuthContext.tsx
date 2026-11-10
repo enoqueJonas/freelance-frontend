@@ -230,9 +230,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const uploadDocument = async (documentUrl: string): Promise<boolean> => {
-    if (!user) return false;
+    if (!user || user.role === 'admin') return false;
     try {
-      const success = await mockApi.auth.uploadVerificationDocument(user.id, documentUrl);
+      const success = await mockApi.auth.uploadVerificationDocument(user.id, user.role, documentUrl);
       if (success) {
         await refreshUserData();
         const activeNotifications = await mockApi.notifications.list(user.id);
