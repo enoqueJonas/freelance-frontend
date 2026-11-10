@@ -20,7 +20,7 @@ export const Login: React.FC = () => {
     { name: 'Nelson Macuácua', email: 'nelson@outlook.co.mz', role: 'Freelancer Não Verificado (Suporte)' },
     { name: 'Maputo Digital', email: 'vagas@maputodigital.co.mz', role: 'Contratante Verificado' },
     { name: 'Inove Sistemas', email: 'geral@inovemz.com', role: 'Contratante Verificado' },
-    { name: 'Suporte Administrativo', email: 'admin@serviplus.co.mz', role: 'Administrador da Plataforma' }
+    { name: 'Suporte Administrativo', email: 'admin@conecta.test', role: 'Administrador da Plataforma' }
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,10 +44,10 @@ export const Login: React.FC = () => {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link to="/" className="flex items-center justify-center gap-2 mb-6">
           <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-extrabold text-xl shadow-md">
-            S+
+            CT
           </div>
           <span className="font-sans font-bold text-xl text-gray-950">
-            ServiPlus Maputo
+            ConecTA Maputo
           </span>
         </Link>
         <h2 className="text-center text-2xl font-bold font-sans text-gray-900 tracking-tight">
