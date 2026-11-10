@@ -7,6 +7,9 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { mockApi } from '../services/mockApi';
+import { disputeService } from '../services/disputes';
+import { DisputeTrackingPanel } from '../components/DisputeTrackingPanel';
+import { AdminDisputesPanel } from '../components/AdminDisputesPanel';
 import { 
   Offer, Proposal, Contract, Payment, User as SystemUser, Notification 
 } from '../types';
@@ -26,6 +29,7 @@ export const Dashboard: React.FC = () => {
   const [userContracts, setUserContracts] = useState<Contract[]>([]);
   const [pendingVerifications, setPendingVerifications] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<SystemUser[]>([]);
+  const [openDisputeCount, setOpenDisputeCount] = useState(0);
 
   // Selection states
   const [activeTab, setActiveTab] = useState<'overview' | 'offers' | 'proposals' | 'contracts' | 'admin'>('overview');
@@ -100,6 +104,8 @@ export const Dashboard: React.FC = () => {
 
         const allContracts = await mockApi.contracts.list();
         setUserContracts(allContracts);
+        const cases = await disputeService.listForUser(user.id);
+        setOpenDisputeCount(cases.filter(item => item.status !== 'RESOLVED' && item.status !== 'CLOSED').length);
       }
     } catch (err) {
       console.error(err);
@@ -210,21 +216,6 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const handleRaiseDispute = async (contractId: number) => {
-    const conf = window.confirm("Tens a certeza que desejas entrar em disputa oficial para mediação técnica com a equipa ServiPlus?");
-    if (!conf) return;
-
-    setLoadingAction(true);
-    try {
-      await mockApi.contracts.dispute(contractId, user!.id);
-      await loadData();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingAction(false);
-    }
-  };
-
   // ---- REVIEW ACTIONS ----
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -249,18 +240,6 @@ export const Dashboard: React.FC = () => {
     setLoadingAction(true);
     try {
       await mockApi.admin.approveDocument(userId, approve);
-      await loadData();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingAction(false);
-    }
-  };
-
-  const handleAdminResolveDispute = async (contractId: number, outcome: 'completed' | 'active') => {
-    setLoadingAction(true);
-    try {
-      await mockApi.admin.resolveDispute(contractId, outcome);
       await loadData();
     } catch (err) {
       console.error(err);
@@ -336,8 +315,8 @@ export const Dashboard: React.FC = () => {
             <p className="text-2xl font-bold text-orange-500 mt-1 bg-orange-50 px-2 py-0.5 rounded inline-block">{pendingVerifications.length}</p>
           </div>
           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Disputas em Curso</p>
-            <p className="text-2xl font-bold text-red-600 mt-1 bg-red-50 px-2 py-0.5 rounded inline-block">{userContracts.filter(c => c.status === 'disputed').length}</p>
+            <p className="text-xs font-bold text-gray-400 uppercase">Conflitos em acompanhamento</p>
+            <p className="text-2xl font-bold text-red-600 mt-1 bg-red-50 px-2 py-0.5 rounded inline-block">{openDisputeCount}</p>
           </div>
           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
             <p className="text-xs font-bold text-gray-400 uppercase">Total Contratado</p>
@@ -561,7 +540,7 @@ export const Dashboard: React.FC = () => {
             <div className="bg-gradient-to-tr from-blue-50 to-indigo-50/50 rounded-2xl border border-blue-50 p-6 space-y-4">
               <h4 className="font-bold text-gray-800 text-sm flex items-center gap-1.5"><Shield size={16} className="text-blue-600" /> Suporte e Árbitros</h4>
               <p className="text-xs text-gray-550 leading-relaxed">
-                Está com dificuldades em validar o escopo técnico do projeto ou o pagamento M-Pesa de um projeto? A nossa equipa de administradores em Maputo faz a mediação técnica do código.
+                Pode reportar um conflito e preservar informações para acompanhamento administrativo. A plataforma não arbitra contratos nem executa pagamentos.
               </p>
             </div>
           </div>
@@ -895,13 +874,6 @@ export const Dashboard: React.FC = () => {
                         {user.role === 'employer' && con.status === 'active' && (
                           <>
                             <button
-                              onClick={() => handleRaiseDispute(con.id)}
-                              className="px-3 py-1.5 text-xs font-semibold text-rose-650 hover:bg-rose-50 rounded-lg flex items-center gap-1 cursor-pointer"
-                            >
-                              <Scale size={14} /> Levantar Disputa
-                            </button>
-
-                            <button
                               onClick={() => {
                                 handleCompleteContract(con.id);
                                 setPayingContract(con);
@@ -928,7 +900,7 @@ export const Dashboard: React.FC = () => {
                         )}
                       </div>
                     </div>
-
+                    <DisputeTrackingPanel contract={con} userId={user.id} />
                   </div>
                 ))}
               </div>
@@ -988,40 +960,7 @@ export const Dashboard: React.FC = () => {
             )}
           </div>
 
-          {/* Manage active disputes */}
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm h-auto">
-            <h2 className="font-semibold text-gray-850 text-base mb-4 flex items-center gap-1.5 border-b border-gray-50 pb-2"><Scale size={18} /> Auditoria de Disputas</h2>
-            
-            {userContracts.filter(c => c.status === 'disputed').length > 0 ? (
-              <div className="space-y-4">
-                {userContracts.filter(c => c.status === 'disputed').map((dis) => (
-                  <div key={dis.id} className="p-3.5 border border-gray-150 rounded-xl space-y-3.5 text-xs">
-                    <div>
-                      <p className="font-bold text-gray-800">{dis.title}</p>
-                      <p className="text-xxs text-gray-400 font-semibold font-mono mt-0.5">Orçamento sob disputa: {dis.budget.toLocaleString()} MT</p>
-                    </div>
-
-                    <div className="flex flex-col gap-2 pt-2 border-t border-gray-100">
-                      <button
-                        onClick={() => handleAdminResolveDispute(dis.id, 'completed')}
-                        className="w-full text-center py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-lg"
-                      >
-                        Decidir a favor do Freelancer ✓
-                      </button>
-                      <button
-                        onClick={() => handleAdminResolveDispute(dis.id, 'active')}
-                        className="w-full text-center py-2 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg"
-                      >
-                        Reabrir Contrato para Ajuste Técnica ↺
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-450 text-xs">Não existem litígios ou disputas pendentes em Moçambique.</p>
-            )}
-          </div>
+          <AdminDisputesPanel adminId={user.id} onUpdated={loadData} />
 
         </div>
       )}
