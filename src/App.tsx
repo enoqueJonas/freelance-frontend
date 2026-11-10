@@ -31,10 +31,10 @@ function AppContent() {
       <div className="min-h-screen bg-[#F3F7FA] flex items-center justify-center">
         <div className="text-center font-sans">
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-extrabold text-xl shadow-md mx-auto mb-4 animate-bounce">
-            S+
+            CT
           </div>
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-            A carregar ServiPlus...
+            A carregar ConecTA...
           </p>
         </div>
       </div>
