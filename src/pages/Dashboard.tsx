@@ -229,20 +229,20 @@ export const Dashboard: React.FC = () => {
       const activeContractsCount = userContracts.filter(c => c.status === 'active').length;
       return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Candidaturas Ativas</p>
-            <p className="text-2xl font-bold text-gray-800 mt-1">{userProposals.length}</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Candidaturas Ativas</p>
+            <p className="text-3xl font-extrabold text-[#173037] mt-2">{userProposals.length}</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Contratos Ativos</p>
-            <p className="text-2xl font-bold text-blue-600 mt-1">{activeContractsCount}</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Contratos Ativos</p>
+            <p className="text-3xl font-extrabold text-primary mt-2">{activeContractsCount}</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Serviços Entregues</p>
-            <p className="text-2xl font-bold text-emerald-600 mt-1">{profile && 'completedJobs' in profile ? profile.completedJobs : 0}</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Serviços Entregues</p>
+            <p className="text-3xl font-extrabold text-secondary mt-2">{profile && 'completedJobs' in profile ? profile.completedJobs : 0}</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Rating Médio</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Rating Médio</p>
             <p className="text-2xl font-bold text-amber-500 mt-1 flex items-center gap-1">
               <LucideStar className="fill-current text-amber-400 shrink-0" size={18} />
               {profile && 'averageRating' in profile ? profile.averageRating : '5.0'}
@@ -255,20 +255,20 @@ export const Dashboard: React.FC = () => {
       const pendingBids = userProposals.filter(p => p.status === 'pending').length;
       return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Projetos Ativos</p>
-            <p className="text-2xl font-bold text-blue-600 mt-1">{activeOffersCount}</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Projetos Ativos</p>
+            <p className="text-3xl font-extrabold text-primary mt-2">{activeOffersCount}</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Propostas Pendentes</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Propostas Pendentes</p>
             <p className="text-2xl font-bold text-orange-655 text-orange-500 mt-1">{pendingBids}</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Contratos Ativos</p>
-            <p className="text-2xl font-bold text-emerald-600 mt-1">{userContracts.filter(c => c.status === 'active').length}</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Contratos Ativos</p>
+            <p className="text-3xl font-extrabold text-secondary mt-2">{userContracts.filter(c => c.status === 'active').length}</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Valor de contratos activos</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Valor de contratos activos</p>
             <p className="text-2xl font-bold text-gray-700 font-mono mt-1">
               {userContracts.filter(c => c.status === 'active').reduce((acc, current) => acc + current.budget, 0).toLocaleString()} MT
             </p>
@@ -279,20 +279,20 @@ export const Dashboard: React.FC = () => {
       // Admin stats
       return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Utilizadores Totais</p>
-            <p className="text-2xl font-bold text-blue-600 mt-1">{allUsers.length}</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Utilizadores Totais</p>
+            <p className="text-3xl font-extrabold text-primary mt-2">{allUsers.length}</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Dossiês em Revisão</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Dossiês em Revisão</p>
             <p className="text-2xl font-bold text-orange-500 mt-1 bg-orange-50 px-2 py-0.5 rounded inline-block">{pendingVerifications.length}</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Conflitos em acompanhamento</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Conflitos em acompanhamento</p>
             <p className="text-2xl font-bold text-red-600 mt-1 bg-red-50 px-2 py-0.5 rounded inline-block">{openDisputeCount}</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase">Total Contratado</p>
+          <div className="conecta-stat p-5">
+            <p className="text-xs font-bold text-[#627778] uppercase tracking-wide">Total Contratado</p>
             <p className="text-2xl font-bold text-gray-800 font-mono mt-1">{userContracts.reduce((acc, c) => acc + c.budget, 0).toLocaleString()} MT</p>
           </div>
         </div>
@@ -527,7 +527,7 @@ export const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Post Offer Form */}
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm h-auto">
+          <div className="conecta-surface p-6 h-auto">
             <h2 className="font-bold text-lg text-gray-850 mb-4 flex items-center gap-1.5">
               <PlusCircle size={18} className="text-blue-600" /> Publicar Novo Projeto
             </h2>
@@ -641,7 +641,7 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Active Published list */}
-          <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <div className="lg:col-span-2 conecta-surface p-6">
             <h2 className="font-bold text-lg text-gray-850 mb-4">Meus Projectos Publicados</h2>
             {userOffers.length > 0 ? (
               <div className="space-y-4">
@@ -670,7 +670,7 @@ export const Dashboard: React.FC = () => {
 
       {/* --------------------- TAB CONTENT: PROPOSALS --------------------- */}
       {activeTab === 'proposals' && (
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm max-w-4xl">
+        <div className="conecta-surface p-6 max-w-4xl">
           <h2 className="font-bold text-lg text-gray-850 mb-2">
             {user.role === 'employer' ? 'Propostas Recebidas de Freelancers' : 'Candidaturas Enviadas'}
           </h2>
@@ -767,7 +767,7 @@ export const Dashboard: React.FC = () => {
       {/* --------------------- TAB CONTENT: CONTRACTS --------------------- */}
       {activeTab === 'contracts' && (
         <div className="max-w-4xl space-y-6">
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <div className="conecta-surface p-6">
             <h2 className="font-bold text-lg text-gray-850 mb-2">
               Meus contratos e pagamentos externos
             </h2>
@@ -879,7 +879,7 @@ export const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* List pending verifications */}
-          <div className="col-span-2 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <div className="col-span-2 conecta-surface p-6">
             <h2 className="font-bold text-lg text-rose-850 flex items-center gap-1.5 mb-2"><Shield size={18} /> Verificação Editorial de BI / Registos</h2>
             <p className="text-xs text-gray-500 mb-6">Analise as identidades e aprova ou recusa conformidades regulamentares no mercado moçambicano.</p>
 
