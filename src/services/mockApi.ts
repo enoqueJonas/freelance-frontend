@@ -15,7 +15,8 @@ import {
   Notification,
   Review,
   ProposalStatus,
-  UserRole
+  UserRole,
+  ProfileRole
 } from '../types';
 
 // Storage keys
@@ -240,22 +241,29 @@ const delay = (ms = 150) => new Promise(resolve => setTimeout(resolve, ms));
 export const mockApi = {
   // ---- AUTHENTICATION ----
   auth: {
-    async login(emailOrUsername: string): Promise<{ user: User; profile?: WorkerProfile | EmployerProfile } | null> {
+    async login(emailOrUsername: string, preferredRole?: ProfileRole): Promise<{ user: User; profile?: WorkerProfile | EmployerProfile } | null> {
       await delay();
       const users = getList<User>(USERS_KEY);
-      const user = users.find(u => u.email === emailOrUsername || u.username === emailOrUsername);
-      if (!user) return null;
+      const account = users.find(u => u.email === emailOrUsername || u.username === emailOrUsername);
+      if (!account) return null;
 
-      let profile;
-      if (user.role === 'worker') {
-        const workers = getList<WorkerProfile>(WORKERS_KEY);
-        profile = workers.find(w => w.userId === user.id);
-      } else if (user.role === 'employer') {
-        const employers = getList<EmployerProfile>(EMPLOYERS_KEY);
-        profile = employers.find(e => e.userId === user.id);
-      }
+      if (account.role === 'admin') return { user: { ...account, roles: [] } };
 
-      return { user, profile };
+      // Papéis efectivos derivam dos perfis criados, não de uma opção de sessão manipulável.
+      const roles: ProfileRole[] = [];
+      const worker = getList<WorkerProfile>(WORKERS_KEY).find(w => w.userId === account.id);
+      const employer = getList<EmployerProfile>(EMPLOYERS_KEY).find(e => e.userId === account.id);
+      if (worker) roles.push('worker');
+      if (employer) roles.push('employer');
+
+      const role = preferredRole && roles.includes(preferredRole)
+        ? preferredRole
+        : roles.includes(account.role as ProfileRole) ? account.role as ProfileRole : roles[0];
+      if (!role) return null;
+      return {
+        user: { ...account, role, roles },
+        profile: role === 'worker' ? worker : employer
+      };
     },
 
     async register(payload: {
@@ -273,6 +281,10 @@ export const mockApi = {
     }): Promise<{ user: User; profile: WorkerProfile | EmployerProfile }> {
       await delay();
       const users = getList<User>(USERS_KEY);
+      if (users.some(u => u.email.toLowerCase() === payload.email.trim().toLowerCase() ||
+        u.username.toLowerCase() === payload.username.trim().toLowerCase())) {
+        throw new Error('Email ou nome de utilizador já registado.');
+      }
       const isVerifiedDefault = false; // Registration keeps users unverified until documents are approved
 
       const newUser: User = {
@@ -282,6 +294,7 @@ export const mockApi = {
         first_name: payload.firstName,
         last_name: payload.lastName,
         role: payload.role,
+        roles: [payload.role],
         is_verified: isVerifiedDefault,
         date_joined: new Date().toISOString().split('T')[0]
       };
@@ -381,6 +394,53 @@ export const mockApi = {
       setList(NOTIFICATIONS_KEY, notifications);
 
       return true;
+    },
+
+    // V01 / RN01: criar o segundo perfil na conta existente, sem criar outra conta.
+    async createAdditionalProfile(userId: number, role: ProfileRole, payload: {
+      location?: string;
+      bio?: string;
+      title?: string;
+      skills?: string[];
+      companyName?: string;
+      industry?: string;
+    }): Promise<WorkerProfile | EmployerProfile> {
+      await delay();
+      const users = getList<User>(USERS_KEY);
+      const user = users.find(u => u.id === userId);
+      if (!user || user.role === 'admin') throw new Error('Conta não elegível.');
+      const roles: ProfileRole[] = [];
+      if (getList<WorkerProfile>(WORKERS_KEY).some(w => w.userId === userId)) roles.push('worker');
+      if (getList<EmployerProfile>(EMPLOYERS_KEY).some(e => e.userId === userId)) roles.push('employer');
+      if (roles.includes(role)) throw new Error('Este perfil já existe nesta conta.');
+
+      let profile: WorkerProfile | EmployerProfile;
+      if (role === 'worker') {
+        if (!payload.title?.trim()) throw new Error('Indique a especialidade profissional.');
+        const workers = getList<WorkerProfile>(WORKERS_KEY);
+        profile = {
+          id: Math.max(0, ...workers.map(w => w.id)) + 1,
+          userId, firstName: user.first_name, lastName: user.last_name, email: user.email,
+          title: payload.title.trim(), bio: payload.bio?.trim() || '',
+          skills: payload.skills || [], experienceYears: 0, completedJobs: 0,
+          averageRating: 0, documentStatus: 'unsubmitted', location: payload.location?.trim() || ''
+        };
+        setList(WORKERS_KEY, [...workers, profile]);
+      } else {
+        const employers = getList<EmployerProfile>(EMPLOYERS_KEY);
+        profile = {
+          id: Math.max(0, ...employers.map(e => e.id)) + 1,
+          userId, companyName: payload.companyName?.trim() || [user.first_name, user.last_name].join(' '),
+          contactName: [user.first_name, user.last_name].join(' '),
+          email: user.email, description: payload.bio?.trim() || '',
+          location: payload.location?.trim() || '', industry: payload.industry?.trim() || '',
+          documentStatus: 'unsubmitted'
+        };
+        setList(EMPLOYERS_KEY, [...employers, profile]);
+      }
+      user.roles = [...roles, role];
+      setList(USERS_KEY, users);
+      return profile;
     },
 
     async updateProfile(userId: number, role: 'worker' | 'employer', payload: any): Promise<any> {
@@ -511,11 +571,16 @@ export const mockApi = {
 
       const offers = getList<Offer>(OFFERS_KEY);
       const offer = offers.find(o => o.id === offerId);
-      if (!offer) {
-        throw new Error('Vaga de emprego não encontrada');
+      if (!offer) throw new Error('Oportunidade não encontrada.');
+      if (offer.status !== 'active') throw new Error('Oportunidade indisponível para propostas.');
+      if (offer.employerProfile.userId === workerUserId) {
+        throw new Error('RN02: não pode propor à sua própria oportunidade.');
       }
 
       const proposals = getList<Proposal>(PROPOSALS_KEY);
+      if (proposals.some(p => p.offerId === offerId && p.workerProfile.userId === workerUserId && p.status !== 'cancelled')) {
+        throw new Error('Já submeteu uma proposta a esta oportunidade.');
+      }
       const newProposal: Proposal = {
         id: proposals.length + 1,
         offerId: offer.id,
@@ -611,6 +676,13 @@ export const mockApi = {
       const offers = getList<Offer>(OFFERS_KEY);
       const offer = offers.find(o => o.id === proposal.offerId);
       if (!offer) throw new Error('Vaga de emprego associada não encontrada');
+      if (offer.employerProfile.userId !== employerUserId) {
+        throw new Error('Apenas o empregador desta oportunidade pode aceitar a proposta.');
+      }
+      if (proposal.workerProfile.userId === employerUserId) {
+        throw new Error('RN02: autocontratação não permitida.');
+      }
+      if (proposal.status !== 'pending') throw new Error('Esta proposta já foi processada.');
 
       const employers = getList<EmployerProfile>(EMPLOYERS_KEY);
       const employerProfile = employers.find(e => e.userId === employerUserId);
@@ -662,7 +734,9 @@ export const mockApi = {
       await delay();
       const contracts = getList<Contract>(CONTRACTS_KEY);
       const idx = contracts.findIndex(c => c.id === contractId);
-      if (idx > -1) {
+      if (idx > -1 && contracts[idx].workerProfile.userId === workerUserId &&
+          contracts[idx].employerId !== workerUserId && contracts[idx].status === 'pending' &&
+          !contracts[idx].signedByWorker) {
         contracts[idx].signedByWorker = true;
         contracts[idx].status = 'active'; // Once both sign, it goes Active
         setList(CONTRACTS_KEY, contracts);
