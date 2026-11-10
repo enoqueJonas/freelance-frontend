@@ -713,7 +713,7 @@ export const mockApi = {
         notifications.unshift({
           id: notifications.length + 1,
           userId: contracts[idx].workerProfile.userId,
-          text: `O contrato para "${contracts[idx].title}" foi marcado como CONCLUÍDO. O pagamento M-Pesa será processado em breve.`,
+          text: `O contrato para "${contracts[idx].title}" foi marcado como CONCLUÍDO. A conclusão do serviço não comprova nem efectua pagamentos.`,
           isRead: false,
           createdAt: new Date().toISOString(),
           type: 'contract'
@@ -750,53 +750,8 @@ export const mockApi = {
     }
   },
 
-  // ---- PAYMENTS ----
-  payments: {
-    async listForUser(userId: number, role: UserRole): Promise<Payment[]> {
-      await delay();
-      const payments = getList<Payment>(PAYMENTS_KEY);
-      const contracts = await mockApi.contracts.getForUser(userId, role);
-      const contractIds = contracts.map(c => c.id);
-      return payments.filter(p => contractIds.includes(p.contractId));
-    },
-
-    async createPay(contractId: number, payload: { amount: number; method: 'M-Pesa' | 'e-Mola' | 'Transferência Bancária' }): Promise<Payment> {
-      await delay();
-      const payments = getList<Payment>(PAYMENTS_KEY);
-      const refCode = `${payload.method === 'M-Pesa' ? 'MP' : payload.method === 'e-Mola' ? 'EM' : 'TB'}-${Math.floor(100000 + Math.random() * 900000)}`;
-
-      const newPayment: Payment = {
-        id: payments.length + 1,
-        contractId: contractId,
-        amount: payload.amount,
-        payoutMethod: payload.method,
-        status: 'completed', // For prototype we approve directly with a mock success
-        refCode: refCode,
-        createdAt: new Date().toISOString()
-      };
-
-      payments.unshift(newPayment);
-      setList(PAYMENTS_KEY, payments);
-
-      // Notify worker of fee escrowed
-      const contracts = getList<Contract>(CONTRACTS_KEY);
-      const contract = contracts.find(c => c.id === contractId);
-      if (contract) {
-        const notifications = getList<Notification>(NOTIFICATIONS_KEY);
-        notifications.unshift({
-          id: notifications.length + 1,
-          userId: contract.workerProfile.userId,
-          text: `Pagamento de ${payload.amount.toLocaleString()} MT efetuado por ${payload.method} referente ao projeto "${contract.title}". Os valores encontram-se em custódia segura até à feitura. Ref: ${refCode}`,
-          isRead: false,
-          createdAt: new Date().toISOString(),
-          type: 'payment'
-        });
-        setList(NOTIFICATIONS_KEY, notifications);
-      }
-
-      return newPayment;
-    }
-  },
+  // Pagamentos reais NÃO são processados aqui. Ver externalPayments.ts para os
+  // registos declarativos de pagamentos feitos fora do protótipo (RN09/RN10).
 
   // ---- CHAT / MESSAGES ----
   messages: {
