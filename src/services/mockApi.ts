@@ -358,42 +358,38 @@ export const mockApi = {
       return { user: newUser, profile };
     },
 
-    async uploadVerificationDocument(userId: number, documentUrl: string): Promise<boolean> {
+    async uploadVerificationDocument(userId: number, role: ProfileRole, documentUrl: string): Promise<boolean> {
       await delay();
       const users = getList<User>(USERS_KEY);
-      const user = users.find(u => u.id === userId);
-      if (!user) return false;
-
-      if (user.role === 'worker') {
+      if (!users.some(u => u.id === userId && u.role !== 'admin')) return false;
+      let updated = false;
+      if (role === 'worker') {
         const workers = getList<WorkerProfile>(WORKERS_KEY);
-        const wIdx = workers.findIndex(w => w.userId === userId);
-        if (wIdx > -1) {
-          workers[wIdx].documentStatus = 'pending';
-          workers[wIdx].documentUrl = documentUrl;
+        const idx = workers.findIndex(w => w.userId === userId);
+        if (idx >= 0) {
+          workers[idx].documentStatus = 'pending';
+          workers[idx].documentUrl = documentUrl;
           setList(WORKERS_KEY, workers);
+          updated = true;
         }
-      } else if (user.role === 'employer') {
+      } else {
         const employers = getList<EmployerProfile>(EMPLOYERS_KEY);
-        const eIdx = employers.findIndex(e => e.userId === userId);
-        if (eIdx > -1) {
-          employers[eIdx].documentStatus = 'pending';
-          employers[eIdx].documentUrl = documentUrl;
+        const idx = employers.findIndex(e => e.userId === userId);
+        if (idx >= 0) {
+          employers[idx].documentStatus = 'pending';
+          employers[idx].documentUrl = documentUrl;
           setList(EMPLOYERS_KEY, employers);
+          updated = true;
         }
       }
-
-      // Notify user
+      if (!updated) return false;
       const notifications = getList<Notification>(NOTIFICATIONS_KEY);
       notifications.unshift({
-        id: notifications.length + 1,
-        userId: userId,
-        text: 'Documentos carregados com sucesso! A nossa equipa irá analisá-los dentro de 24 horas.',
-        isRead: false,
-        createdAt: new Date().toISOString(),
-        type: 'verification'
+        id: notifications.length + 1, userId,
+        text: 'Documentação do perfil enviada para análise.',
+        isRead: false, createdAt: new Date().toISOString(), type: 'verification'
       });
       setList(NOTIFICATIONS_KEY, notifications);
-
       return true;
     },
 
@@ -1106,53 +1102,35 @@ export const mockApi = {
       return items;
     },
 
-    async approveDocument(userId: number, approve: boolean): Promise<boolean> {
+    async approveDocument(userId: number, role: ProfileRole, approve: boolean): Promise<boolean> {
       await delay();
-      const users = getList<User>(USERS_KEY);
-      const uIdx = users.findIndex(u => u.id === userId);
-      if (uIdx === -1) return false;
-
       const targetStatus = approve ? 'approved' : 'rejected';
-
-      if (users[uIdx].role === 'worker') {
+      let updated = false;
+      if (role === 'worker') {
         const workers = getList<WorkerProfile>(WORKERS_KEY);
-        const wIdx = workers.findIndex(w => w.userId === userId);
-        if (wIdx > -1) {
-          workers[wIdx].documentStatus = targetStatus;
+        const idx = workers.findIndex(w => w.userId === userId && w.documentStatus === 'pending');
+        if (idx >= 0) {
+          workers[idx].documentStatus = targetStatus;
           setList(WORKERS_KEY, workers);
+          updated = true;
         }
-      } else if (users[uIdx].role === 'employer') {
-        const employers = getList<EmployerProfile>(EMPLOYERS_KEY);
-        const eIdx = employers.findIndex(e => e.userId === userId);
-        if (eIdx > -1) {
-          employers[eIdx].documentStatus = targetStatus;
-          setList(EMPLOYERS_KEY, employers);
-        }
-      }
-
-      if (approve) {
-        users[uIdx].is_verified = true;
       } else {
-        users[uIdx].is_verified = false;
+        const employers = getList<EmployerProfile>(EMPLOYERS_KEY);
+        const idx = employers.findIndex(e => e.userId === userId && e.documentStatus === 'pending');
+        if (idx >= 0) {
+          employers[idx].documentStatus = targetStatus;
+          setList(EMPLOYERS_KEY, employers);
+          updated = true;
+        }
       }
-      setList(USERS_KEY, users);
-
-      // Send User confirmation notification
+      if (!updated) return false;
       const notifications = getList<Notification>(NOTIFICATIONS_KEY);
-      const statusText = approve
-        ? 'A sua conta foi VERIFICADA e autenticada com sucesso! Agora tem acesso completo à publicação de vagas ou envio de propostas.'
-        : 'Os seus documentos de identificação foram recusados por falta de legitimidade ou ficheiro corrompido. Submeta novamente na secção do perfil.';
-      
       notifications.unshift({
-        id: notifications.length + 1,
-        userId: userId,
-        text: statusText,
-        isRead: false,
-        createdAt: new Date().toISOString(),
-        type: 'verification'
+        id: notifications.length + 1, userId,
+        text: approve ? 'O seu perfil foi aprovado.' : 'A documentação do seu perfil foi recusada.',
+        isRead: false, createdAt: new Date().toISOString(), type: 'verification'
       });
       setList(NOTIFICATIONS_KEY, notifications);
-
       return true;
     },
 
