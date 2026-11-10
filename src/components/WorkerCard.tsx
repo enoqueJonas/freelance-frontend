@@ -14,16 +14,16 @@ interface WorkerCardProps {
 
 export const WorkerCard: React.FC<WorkerCardProps> = ({ worker }) => {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 hover:border-primary/35 p-6 shadow-sm hover:shadow-md transition-all group flex flex-col justify-between h-full">
+    <div className="conecta-card p-6 group flex flex-col justify-between h-full">
       <div>
         {/* Verification & Avatar Name row */}
         <div className="flex gap-4 items-start mb-4">
-          <div className="w-12 h-12 rounded-full bg-primary/10 text-primary font-extrabold flex items-center justify-center text-lg uppercase shadow-inner border border-primary/20">
+          <div className="w-12 h-12 rounded-2xl bg-[#E5F2E9] text-primary font-extrabold flex items-center justify-center text-lg uppercase shadow-inner border border-primary/20">
             {worker.firstName.charAt(0)}{worker.lastName.charAt(0)}
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <h3 className="font-sans font-bold text-base text-gray-800 hover:text-primary transition-colors">
+              <h3 className="font-display font-extrabold text-base text-[#173037] hover:text-secondary transition-colors">
                 <Link to={`/profile/${worker.userId}?role=worker`}>
                   {worker.firstName} {worker.lastName}
                 </Link>
@@ -58,7 +58,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({ worker }) => {
         </div>
 
         {/* Short bio preview */}
-        <p className="text-sm text-gray-500 line-clamp-3 mb-4 leading-relaxed">
+        <p className="text-sm text-[#607578] line-clamp-3 mb-4 leading-relaxed">
           {worker.bio || 'Profissional de TI pronto para colaborar no desenvolvimento da sua infraestrutura web ou mobile em Moçambique.'}
         </p>
 
@@ -67,7 +67,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({ worker }) => {
           {worker.skills.slice(0, 5).map((skill, index) => (
             <span 
               key={index} 
-              className="px-2 py-0.5 text-xs text-gray-600 bg-gray-55 bg-indigo-50/50 text-indigo-700 rounded-md text-[11px] font-medium border border-indigo-100"
+              className="px-2 py-0.5 text-xs text-gray-600 bg-[#EBF5EF] text-[#146B5E] rounded-md text-[11px] font-medium border border-[#D6E8DC]"
             >
               {skill}
             </span>
@@ -90,7 +90,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({ worker }) => {
         <div className="flex gap-2">
           <Link
             to={`/messages?peer=${worker.userId}`}
-            className="p-2 text-primary hover:text-white bg-primary/10 hover:bg-primary rounded-lg transition-colors"
+            className="p-2 text-primary hover:text-white bg-[#E8F2EE] hover:bg-primary rounded-lg transition-colors"
             title="Enviar mensagem"
           >
             <MessageSquare size={14} />
