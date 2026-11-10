@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { ProfileRolesPanel } from '../components/ProfileRolesPanel';
 import { mockApi } from '../services/mockApi';
 import { PaymentTrackingPanel } from '../components/PaymentTrackingPanel';
+import { AgreementPanel } from '../components/AgreementPanel';
 import { DisputeTrackingPanel } from '../components/DisputeTrackingPanel';
 import { AdminDisputesPanel } from '../components/AdminDisputesPanel';
 import { disputeService } from '../services/disputes';
@@ -129,18 +130,6 @@ export const Dashboard: React.FC = () => {
       console.error(err);
     } finally {
       setUploadLoading(false);
-    }
-  };
-
-  const handleSignContract = async (contractId: number) => {
-    setLoadingAction(true);
-    try {
-      await mockApi.contracts.sign(contractId, user!.id);
-      await loadData();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingAction(false);
     }
   };
 
@@ -842,16 +831,6 @@ export const Dashboard: React.FC = () => {
                       </Link>
 
                       <div className="flex gap-2">
-                        {/* Worker Action: Read and Sign Pending Contract */}
-                        {user.role === 'worker' && !con.signedByWorker && con.status === 'pending' && (
-                          <button
-                            onClick={() => handleSignContract(con.id)}
-                            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all cursor-pointer"
-                          >
-                            Ler e Assinar Contrato
-                          </button>
-                        )}
-
                         {/* Employer Actions for Active Contracts */}
                         {user.role === 'employer' && con.status === 'active' && (
                           <>
@@ -879,6 +858,7 @@ export const Dashboard: React.FC = () => {
                         )}
                       </div>
                     </div>
+                    <AgreementPanel contract={con} userId={user.id} role={user.role} onUpdated={loadData} />
                     <PaymentTrackingPanel contract={con} userId={user.id} role={user.role} />
                     <DisputeTrackingPanel contract={con} userId={user.id} />
                   </div>
