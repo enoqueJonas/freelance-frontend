@@ -1001,7 +1001,7 @@ export const mockApi = {
       return reviews.filter(r => r.targetId === targetUserId);
     },
 
-    async create(contractId: number, authorUserId: number, rating: number, comment: string): Promise<Review | null> {
+    async create(contractId: number, authorUserId: number, authorRole: ProfileRole, rating: number, comment: string): Promise<Review | null> {
       await delay();
       const contracts = getList<Contract>(CONTRACTS_KEY);
       const contract = contracts.find(c => c.id === contractId);
@@ -1009,17 +1009,19 @@ export const mockApi = {
 
       const users = getList<User>(USERS_KEY);
       const author = users.find(u => u.id === authorUserId);
-      if (!author) return null;
-
-      // Target of review depends on author role
-      const targetId = author.role === 'employer' ? contract.workerProfile.userId : contract.employerId;
+      if (!author || contract.status !== 'completed' || rating < 1 || rating > 5) return null;
+      const isEmployer = authorRole === 'employer' && contract.employerId === authorUserId;
+      const isWorker = authorRole === 'worker' && contract.workerProfile.userId === authorUserId;
+      if (!isEmployer && !isWorker) return null;
+      const targetId = isEmployer ? contract.workerProfile.userId : contract.employerId;
 
       const reviews = getList<Review>(REVIEWS_KEY);
+      if (reviews.some(r => r.contractId === contractId && r.authorId === authorUserId)) return null;
       const newReview: Review = {
         id: reviews.length + 1,
         contractId,
         authorId: authorUserId,
-        authorName: author.role === 'employer' ? contract.employerProfile.companyName : `${author.first_name} ${author.last_name}`,
+        authorName: isEmployer ? contract.employerProfile.companyName : `${author.first_name} ${author.last_name}`,
         targetId,
         score: rating,
         comment,
@@ -1031,7 +1033,7 @@ export const mockApi = {
 
       // Recalculate average rating of target if worker
       const targetUser = users.find(u => u.id === targetId);
-      if (targetUser && targetUser.role === 'worker') {
+      if (isEmployer) {
         const workers = getList<WorkerProfile>(WORKERS_KEY);
         const wIdx = workers.findIndex(w => w.userId === targetId);
         if (wIdx > -1) {
