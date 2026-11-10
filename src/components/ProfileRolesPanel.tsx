@@ -58,7 +58,7 @@ export const ProfileRolesPanel: React.FC = () => {
   };
 
   return (
-    <section aria-label="Perfis de utilizador" className="bg-white border border-gray-100 rounded-2xl p-5 mb-7 shadow-sm">
+    <section aria-label="Perfis de utilizador" className="conecta-surface p-6 mb-7">
       <h2 className="text-base font-bold text-gray-900">Os meus perfis</h2>
       <p className="text-xs text-gray-500 mt-1">
         Pode actuar como trabalhador e empregador na mesma conta, mas não nas duas partes da mesma oportunidade.
@@ -71,7 +71,7 @@ export const ProfileRolesPanel: React.FC = () => {
             <button key={role} type="button" disabled={busy || active}
               onClick={() => exists ? activate(role) : setCreating(role)}
               aria-pressed={active}
-              className={`px-4 py-2 rounded-lg border text-sm font-semibold transition-colors ${active ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-700 hover:bg-gray-50'} disabled:cursor-default`}>
+              className={`px-4 py-2 rounded-lg border text-sm font-semibold transition-colors ${active ? 'border-secondary bg-[#E7F2ED] text-[#0B655B]' : 'border-gray-200 text-gray-700 hover:bg-gray-50'} disabled:cursor-default`}>
               {names[role]}{active ? ' · Activo' : exists ? ' · Mudar' : ' · Criar perfil'}
             </button>
           );
@@ -130,7 +130,7 @@ export const ProfileRolesPanel: React.FC = () => {
           {error && <p role="alert" className="text-xs text-red-600">{error}</p>}
           <div className="flex gap-2">
             <button type="submit" disabled={busy}
-              className="bg-blue-600 text-white rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-60">
+              className="bg-primary text-white rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-60">
               {busy ? 'A guardar...' : 'Criar e activar perfil'}
             </button>
             <button type="button" onClick={() => setCreating(null)} disabled={busy}
