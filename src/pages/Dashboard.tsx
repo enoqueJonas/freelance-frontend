@@ -177,10 +177,13 @@ export const Dashboard: React.FC = () => {
   const handleCompleteContract = async (contractId: number) => {
     setLoadingAction(true);
     try {
-      await mockApi.contracts.complete(contractId);
+      if (!user || !await mockApi.contracts.complete(contractId, user.id)) {
+        throw new Error('Só o empregador pode concluir um contrato activo com acordo bilateral aceite.');
+      }
       await loadData();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert(err.message || 'Não foi possível concluir o serviço.');
     } finally {
       setLoadingAction(false);
     }
