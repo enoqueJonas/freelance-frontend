@@ -157,7 +157,7 @@ export const PaymentTrackingPanel: React.FC<Props> = ({ contract, userId, role }
                 <p className="text-gray-500">
                   Data indicada: {payment.paidOn}
                   {payment.externalReference ? ' · Referência informada: ' + payment.externalReference : ''}
-                  {payment.agreementVersionId ? ' · Acordo v' + payment.agreementVersionId + ' (ID da versão)' : ' · Registo sem associação a versão'}
+                  {payment.agreementVersionId ? ' · ID da versão do acordo: ' + payment.agreementVersionId : ' · Registo sem associação a versão'}
                 </p>
                 {payment.notes && <p className="text-gray-600">Observação: {payment.notes}</p>}
                 {payment.responseNote && <p className="text-gray-600">Resposta: {payment.responseNote}</p>}
