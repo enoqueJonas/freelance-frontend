@@ -205,7 +205,7 @@ await snap('03-registo-empregador.png', 'Formulário de registo de empregador',
 await snap('04-pesquisa-oportunidades.png', 'Pesquisa e filtragem de oportunidades',
   '/offers', null, 'Projectos');
 await snap('05-pesquisa-profissionais.png', 'Pesquisa e filtragem de profissionais',
-  '/workers', null, 'Profissionais');
+  '/workers', null, null);
 await snap('06-acesso-prototipo.png', 'Acesso à conta na versão demonstrativa',
   '/login', null, 'Aceder à sua conta',
   'Acesso simulado sem palavra-passe. Não utilizar como evidência de segurança ou autenticação.');
