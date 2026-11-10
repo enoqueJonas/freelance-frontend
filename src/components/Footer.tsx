@@ -80,7 +80,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <span className="text-gray-400 block hover:text-white cursor-pointer transition-colors">
-                  Políticas de Escrow & Arbitragem
+                  Condições e acompanhamento de conflitos
                 </span>
               </li>
               <li>
