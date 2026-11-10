@@ -772,7 +772,7 @@ export const Dashboard: React.FC = () => {
                         <div className="flex items-center gap-4 text-xxs font-semibold">
                           <span className="text-amber-500 font-bold flex items-center gap-0.5">★ {prop.workerProfile.averageRating}</span>
                           <span className="text-gray-400">{prop.workerProfile.completedJobs} Projectos</span>
-                          <Link to={`/profile/${prop.workerProfile.userId}`} className="text-blue-600 font-bold hover:underline">Ver Perfil</Link>
+                          <Link to={`/profile/${prop.workerProfile.userId}?role=worker`} className="text-blue-600 font-bold hover:underline">Ver Perfil</Link>
                         </div>
                       </div>
                     )}
@@ -961,7 +961,7 @@ export const Dashboard: React.FC = () => {
             {pendingVerifications.length > 0 ? (
               <div className="space-y-4">
                 {pendingVerifications.map((item) => (
-                  <div key={item.id} className="p-4 border border-gray-100 rounded-xl space-y-3.5 text-xs">
+                  <div key={`${item.role}-${item.userId}`} className="p-4 border border-gray-100 rounded-xl space-y-3.5 text-xs">
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-bold text-gray-800 text-sm">{item.name}</p>
